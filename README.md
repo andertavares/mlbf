@@ -18,6 +18,10 @@ You need the following libraries (commands to install assume a conda environment
 * fire (`conda install -c conda-forge fire`)
 * pysat (`pip install python-sat[pblib,aiger]`)
 
+Then you just need to clone this repository:
+
+`git clone https://github.com/andertavares/mlsat.git` and enter the new directory `mlsat` to be able to execute.
+
 ## Execution
 
 `python main.py cnf=path_to_cnf_file`
