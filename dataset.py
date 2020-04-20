@@ -27,20 +27,21 @@ def generate_dataset(cnf_file):
 
     
     '''
-
+    print(f'Reading boolean formula from {cnf_file}.')
     formula = CNF(from_file=cnf_file)
 
     # num_vars = formula.nv
     # sat_list = []
     unsat_list = []
 
+    print('Finding all satisfiable assignments to the formula.')
     with Glucose3(bootstrap_with=formula) as solver:
 
         # for each positive (sat) instance, flip a literal to generate a negative (unsat) instance
 
         # transforming each sat instance into tuple eases the generation of negative instances
         sat_list = [m for m in solver.enum_models()]  # enum_models returns a generator and not a list
-
+        print(f'Found {len(sat_list)} sat instances. Generating the same number of unsat instances.')
         # print(sat_list[0])
         sat_set = set([tuple(s) for s in sat_list])  # much quicker to verify an existing instance
 
@@ -59,6 +60,7 @@ def generate_dataset(cnf_file):
     for unsat in unsat_list:
         unsat.append(0)
 
+    print(f'Preparing dataset.')
     # concats and shuffles the two lists
     all_data = sat_list + unsat_list
     # random.seed(2) # uncomment to debug (otherwise each shuffle will give a different array)

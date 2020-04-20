@@ -14,9 +14,9 @@ def main(cnf='instances/bw_large.d.cnf'):
     Receives a boolean formula specified in CNF format,
     Generates many sat and unsat samples for the formula,
     Trains a classifier on this dataset,
-    Outputs performance metrics.
+    Writes performance metrics to the standard output
 
-    :param cnf:
+    :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
     :return:
     """
     data_x, data_y = dataset.generate_dataset(cnf)
@@ -36,6 +36,8 @@ def run_model(model, data_x, data_y, splitter=StratifiedKFold(n_splits=5)):
     :param splitter: an object that implements split to partition the dataset (useful for cross-validation, for example)
     :return:
     """
+
+    print(f'Running the classifier {type(model)}')
 
     # prints the header
     print('#instances\tprec\tacc')
