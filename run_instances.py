@@ -1,4 +1,6 @@
 import os
+import shutil
+
 import fire
 import main
 import tarfile
@@ -20,16 +22,17 @@ def run(instances, output_file='out.csv', extraction_point='/tmp/satinstances'):
     with tarfile.open(instances) as tf:
         tf.extractall(extraction_point)
 
-    # run each instance in the extraction point
+    # run each instance in the extraction point (finds all files there recursively)
     for root, dirs, files in os.walk(extraction_point):
-        print(f'{len(files)} files are at {extraction_point}.')
+        print(f'{len(files)} files are at {root}.')
 
         for f in files:
             print(f'Running {f}...')
             main.main(os.path.join(root, f), output_file)
             print()  # just a newline
-        print("Finished all instances.")
-
+    print(f"Finished all instances. Removing extraction point {extraction_point}.")
+    shutil.rmtree(extraction_point)
+    print('Done')
 
 if __name__ == '__main__':
     fire.Fire(run)

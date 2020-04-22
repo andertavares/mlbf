@@ -41,7 +41,13 @@ def generate_dataset(cnf_file):
 
         # transforming each sat instance into tuple eases the generation of negative instances
         sat_list = [m for m in solver.enum_models()]  # enum_models returns a generator and not a list
-        print(f'Found {len(sat_list)} sat instances. Generating the same number of unsat instances.')
+        print(f'Found {len(sat_list)} sat instances.')
+        if len(sat_list) == 0:
+            print('WARNING: No sat instance found, returning empty dataset.')
+            return [], []
+
+        print('Generating the same number of unsat instances.')
+
         # print(sat_list[0])
         sat_set = set([tuple(s) for s in sat_list])  # much quicker to verify an existing instance
 
