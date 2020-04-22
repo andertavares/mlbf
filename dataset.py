@@ -1,10 +1,12 @@
 import random
+import sys
+
 import pandas as pd
 from pysat.formula import CNF
-from pysat.solvers import Glucose3
+from pysat.solvers import Glucose3, Solver, NoSuchSolverError
 
 
-def generate_dataset(cnf_file):
+def generate_dataset(cnf_file, solver_name='Glucose3'):
     """
     Generates a dataset from the boolean formula in the informed CNF file.
     Particularly, it enumerates all satisfying samples with a SAT solver.
@@ -34,31 +36,38 @@ def generate_dataset(cnf_file):
     # sat_list = []
     unsat_list = []
 
-    print('Finding all satisfiable assignments to the formula.')
-    with Glucose3(bootstrap_with=formula) as solver:
+    print(f'Finding all satisfiable assignments with {solver_name}')
+    try:
+        with Solver(name=solver_name, bootstrap_with=formula) as solver:
 
-        # for each positive (sat) instance, flip a literal to generate a negative (unsat) instance
+            # for each positive (sat) instance, flip a literal to generate a negative (unsat) instance
 
-        # transforming each sat instance into tuple eases the generation of negative instances
-        sat_list = [m for m in solver.enum_models()]  # enum_models returns a generator and not a list
-        print(f'Found {len(sat_list)} sat instances.')
-        if len(sat_list) == 0:
-            print('WARNING: No sat instance found, returning empty dataset.')
-            return [], []
+            # transforming each sat instance into tuple eases the generation of negative instances
+            sat_list = [m for m in solver.enum_models()]  # enum_models returns a generator and not a list
+            print(f'Found {len(sat_list)} sat instances.')
+            if len(sat_list) == 0:
+                print('WARNING: No sat instance found, returning empty dataset.')
+                return [], []
 
-        print('Generating the same number of unsat instances.')
+            print('Generating the same number of unsat instances.')
 
-        # print(sat_list[0])
-        sat_set = set([tuple(s) for s in sat_list])  # much quicker to verify an existing instance
+            # print(sat_list[0])
+            sat_set = set([tuple(s) for s in sat_list])  # much quicker to verify an existing instance
 
-        for assignment in sat_list:
-            for i, literal in enumerate(assignment):
-                tentative_unsat = list(assignment)
-                tentative_unsat[i] = -tentative_unsat[i]  # negating one literal
-                if tuple(tentative_unsat) not in sat_set:
-                    unsat_list.append(tentative_unsat)
-                    break  # goes on to next assignment
-                # print(f'negated {i}-th')
+            for assignment in sat_list:
+                for i, literal in enumerate(assignment):
+                    tentative_unsat = list(assignment)
+                    tentative_unsat[i] = -tentative_unsat[i]  # negating one literal
+                    if tuple(tentative_unsat) not in sat_set:
+                        unsat_list.append(tentative_unsat)
+                        break  # goes on to next assignment
+                    # print(f'negated {i}-th')
+    except NoSuchSolverError as e:
+        print(f'ERROR: no solver named "{solver_name}" was found. '
+              f'Please use one of the names in '
+              f'https://pysathq.github.io/docs/html/api/solvers.html#pysat.solvers.SolverNames'
+              f', such as Glucose3, for example. Exiting.')
+        sys.exit(0)
 
     # appends the labels (1 to sat samples, 0 to unsat samples)
     for sat in sat_list:

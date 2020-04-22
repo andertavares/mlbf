@@ -11,7 +11,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf='instances/bw_large.d.cnf', output='out.csv'):
+def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv'):
     """
     Runs the prototype, executing the following steps:
 
@@ -20,11 +20,13 @@ def main(cnf='instances/bw_large.d.cnf', output='out.csv'):
     Trains a classifier on this dataset,
     Writes performance metrics to the standard output
 
-    :param output: path to output file
     :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
+    :param solver: name of the SAT solver to find the satisfying samples
+    :param output: path to output file
     :return:
     """
-    data_x, data_y = dataset.generate_dataset(cnf)
+    start = datetime.datetime.now()
+    data_x, data_y = dataset.generate_dataset(cnf, solver_name=solver)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
@@ -37,10 +39,9 @@ def main(cnf='instances/bw_large.d.cnf', output='out.csv'):
 
     with open(output, 'a') as outstream:
         # gathers accuracy and precision by running the model and writes it to output
-        start = datetime.datetime.now()
         acc, prec = run_model(learner, data_x, data_y, splitter)
         finish = datetime.datetime.now()
-        outstream.write(f'{os.path.basename(cnf)},{type(learner)},{acc},{prec},{start},{finish}\n')
+        outstream.write(f'{os.path.basename(cnf)},{solver},{type(learner)},{acc},{prec},{start},{finish}\n')
 
 
 def write_header(output):
@@ -51,7 +52,7 @@ def write_header(output):
     """
     if output is not None and not os.path.exists(output):
         with open(output, 'w') as out:
-            out.write('dataset,model,accuracy,precision,start,finish\n')
+            out.write('dataset,solver,learner,accuracy,precision,start,finish\n')
 
 
 def run_model(model, data_x, data_y, splitter):
