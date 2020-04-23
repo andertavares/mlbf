@@ -24,8 +24,14 @@ Then you just need to clone this repository:
 
 ## Execution
 
-`python main.py cnf=path_to_cnf_file`
+* Single instance: 
+`python main.py cnf=path_to_cnf_file --solver=SolverName --output=output_file`
 
-If cnf is omitted, it runs with  `instances/bw_large.d.cnf` by default. This is a blocks world instance from satlib (https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/PLANNING/BlocksWorld/descr.html)
+Defaults are: `cnf=instances/bw_large.d.cnf`, `solver=Glucose3`, `output=out.csv`. The instance one from blocks world from satlib (https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/PLANNING/BlocksWorld/descr.html). The solver must be one of: https://pysathq.github.io/docs/html/api/solvers.html.
+
+* Many instances in a .tar.gz file:
+This is particularly useful to evaluate in SATlib instances, which have many related intances packed in a .tar.gz file. The command is (values assigned to [optional] parameters are the default ones, which can be replaced as you wish):
+
+`python run_instances.py instances_file [--output_file=out.csv extraction_point=/tmp/satinstances solver='Glucose3']`
 
 
