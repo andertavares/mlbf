@@ -35,5 +35,6 @@ def run(instances, output_file='out.csv', extraction_point='/tmp/satinstances', 
     shutil.rmtree(extraction_point)
     print('Done')
 
+
 if __name__ == '__main__':
     fire.Fire(run)
