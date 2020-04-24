@@ -6,7 +6,7 @@ from pysat.formula import CNF
 from pysat.solvers import Glucose3, Solver, NoSuchSolverError
 
 
-def generate_dataset(cnf_file, solver_name='Glucose3', max_samples=10):
+def generate_dataset(cnf_file, solver_name='Glucose3', max_samples=1000):
     """
     Generates a dataset from the boolean formula in the informed CNF file.
     Particularly, it enumerates all satisfying samples with a SAT solver.
