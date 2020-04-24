@@ -2,6 +2,8 @@ import datetime
 import os
 import sys
 import fire
+from sklearn.neural_network import MLPClassifier
+
 import dataset
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -11,7 +13,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv'):
+def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', model='MLP'):
     """
     Runs the prototype, executing the following steps:
 
@@ -20,6 +22,7 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv'):
     Trains a classifier on this dataset,
     Writes performance metrics to the standard output
 
+    :param model: learner (MLP or DecisionTree)
     :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
@@ -33,6 +36,9 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv'):
         return
 
     learner = DecisionTreeClassifier()
+    if model == 'MLP':
+        learner = MLPClassifier(hidden_layer_sizes=(200, 100))
+
     splitter = StratifiedKFold(n_splits=5)
 
     write_header(output)
