@@ -1,12 +1,23 @@
-import random
+import os
 import sys
+import random
+
+from abc import ABC  # abstract base class
 
 import pandas as pd
 from pysat.formula import CNF
 from pysat.solvers import Solver, NoSuchSolverError
 
 
-class PySATDatasetGenerator:
+class DatasetGenerator(ABC):
+    """
+    An abstract base class to provide a uniform interface for dataset generation
+    """
+    def generate_dataset(self, cnf_file, max_samples=1000):
+        pass
+
+
+class PySATDatasetGenerator(DatasetGenerator):
     def __init__(self, solver_name='Glucose3'):
         """
         Uses a SAT solver from pysat to generate positive samples (SAT witnesses).
@@ -115,3 +126,62 @@ class PySATDatasetGenerator:
         data_y = df['f']
 
         return data_x, data_y
+
+
+class UnigenDatasetGenerator(DatasetGenerator):
+    def __init__(self, tmp_dir='/tmp/unigen'):
+        """
+        Initializes the UnigenDatasetGenerator
+        :param tmp_dir: working dir of the sample generator unigen
+        """
+        self.tmp_dir = tmp_dir
+
+    def generate_dataset(self, cnf_file, max_samples=1000):
+        """
+        Uses Unigen2 (https://bitbucket.org/kuldeepmeel/unigen) to generate a dataset
+        :param cnf_file:
+        :param max_samples:
+        :return:
+        """
+        import subprocess
+
+        # makes sure that unigen working dir exists
+        os.makedirs(self.tmp_dir, exist_ok=True)
+
+        '''
+        unigen is called with: python UniGen2.py [options] cnf_file output
+        We'll call python from the command line as it is not straightforward to 
+        import unigen and instantiate its parameters directly
+        '''
+
+        # saves the current dir, the input name (filename w/o extension) and
+        # absolute path to the input
+        current_dir = os.getcwd()
+        cnf_name = os.path.splitext(os.path.basename(cnf_file))[0]
+        cnf_abspath = os.path.abspath(cnf_file)
+
+        # enters unigen dir and generates samples for f and ~f
+        os.chdir('unigen')
+        # generates positive samples (calls unigen on the formula from cnf_file)
+        ret_code = subprocess.call(
+            f'python UniGen2.py -samples={max_samples//2} -runIndex=0 '
+            f'{cnf_abspath} {self.tmp_dir}'.split(' ')  # split because call accepts an array
+        )
+        if ret_code != 0:
+            print("WARNING! there has been some error with unigen's execution. "
+                  "Please check the output above.")
+        # the file with the positive samples is self.tmp_dir/cnf_file_0.txt
+        positives = []
+        with open(os.path.join(self.tmp_dir, f'{cnf_name}_0.txt')) as sample_file:
+            for line in sample_file.readlines():
+                # format of each line: v1 2 ... N 0:M, where 1 2 ... N are the variables (asserted or negated)
+                # strips, discards the first char (v), splits with space, discards the last part (0:M)
+                # str_assignments is an array with the variables (asserted or negated)
+                str_assignments = line.strip()[1:].split(' ')[:-1]
+                # appends this assignment to the list of positive (witnesses for f)
+                positives.append([int(x) for x in str_assignments])
+
+        # TODO: negate F, call unigen & process the output
+
+        # comes back to the original dir
+        os.chdir(current_dir)

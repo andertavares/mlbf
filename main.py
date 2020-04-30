@@ -29,7 +29,8 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', mo
     :return:
     """
     start = datetime.datetime.now()
-    data_generator = dataset.PySATDatasetGenerator(solver_name=solver)
+    #data_generator = dataset.PySATDatasetGenerator(solver_name=solver)
+    data_generator = dataset.UnigenDatasetGenerator()
     data_x, data_y = data_generator.generate_dataset(cnf)
 
     if len(data_x) < 100:
