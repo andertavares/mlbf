@@ -29,7 +29,8 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', mo
     :return:
     """
     start = datetime.datetime.now()
-    data_x, data_y = dataset.generate_dataset(cnf, solver_name=solver)
+    data_generator = dataset.PySATDatasetGenerator(solver_name=solver)
+    data_x, data_y = data_generator.generate_dataset(cnf)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
