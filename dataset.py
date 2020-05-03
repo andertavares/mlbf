@@ -170,27 +170,47 @@ class UnigenDatasetGenerator(DatasetGenerator):
         # the file with the positive samples is pos_dir/cnf_file_0.txt
         cnf_name = os.path.splitext(os.path.basename(cnf_file))[0]
         positives = self.recover_samples(os.path.join(pos_dir, f'{cnf_name}_0.txt'))
-
-        # saves ~f in the neg_dir and calls unigen there
-
-        # sample uniformly from ~f: use cnf.clauses and 'count' assignments from there
-        for i in range(len(positives)):
-            satisfied = True
-            while satisfied:
-                # generates a random assignment and adds it to the list of negatives if
-                # it does NOT satisfy f
-                candidate_neg = [x if random.choice([0, 1]) == 1 else -x for x in range(f.nv)]
-
-
+        print(f'Sampled {len(positives)} positive instances')
 
         print("Generating negative instances.")
-        neg_f_path = os.path.join(neg_dir, 'neg_f.cnf')  # where ~f cnf file will be saved
-        neg_f.to_file(neg_f_path)
-        self.run_unigen(neg_f_path, neg_dir, max_samples)
-
-        # the slice n[:f.nv] discards additional auxiliary variables creates when negating f
-        negatives = [n[:f.nv] for n in self.recover_samples(os.path.join(neg_dir, 'neg_f_0.txt'))]
+        # limits the # of negatives by either max_samples/2 or #positives
+        negatives = self.generate_negative_samples(f, min(len(positives), max_samples // 2))
+        print(f'Sampled {len(negatives)} negative instances')
         return self.prepare_dataset(positives, negatives)
+
+    def generate_negative_samples(self, f, max_samples, max_attempts=100000):
+        """
+        Generates negative samples of a boolean formula f uniformly at random
+        :param f:
+        :param max_samples: maximum number of samples to generate
+        :param max_attempts: maximum number of attempts (prevents infinite loop in case of difficult negative samples)
+        :return:
+        """
+        negatives = set()
+        attempts = 0
+        while len(negatives) < max_samples and attempts < max_attempts:
+            attempts += 1
+
+            # generates a random assignment and tests if it satisfies f
+            # the candidate follows the DIMACS format (i or -i for asserted/negated variable i)
+            candidate = [x * random.choice([-1, 1]) for x in range(1, f.nv + 1)]  # 1 to n+1 because literal indexes start at 1
+
+            # avoids generating duplicate instances
+            if tuple(candidate) in negatives:
+                # print(f'duplicate {candidate} detected')
+                continue
+
+            if any([all([candidate[abs(l) - 1] * l < 0 for l in clause]) for clause in f.clauses]):
+                # print(f'{candidate} evaluated to false, adding to negatives')
+                negatives.add(tuple(candidate))
+
+        # transforms the set of tuples into a list of lists
+        neg_list = list([list(x) for x in negatives])
+
+        if attempts == max_attempts:
+            print(f'WARNING: maximum #attempts ({max_attempts}) to generate ~f samples reached.')
+
+        return neg_list
 
     def recover_samples(self, samples_path):
         """
