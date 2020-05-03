@@ -172,6 +172,17 @@ class UnigenDatasetGenerator(DatasetGenerator):
         positives = self.recover_samples(os.path.join(pos_dir, f'{cnf_name}_0.txt'))
 
         # saves ~f in the neg_dir and calls unigen there
+
+        # sample uniformly from ~f: use cnf.clauses and 'count' assignments from there
+        for i in range(len(positives)):
+            satisfied = True
+            while satisfied:
+                # generates a random assignment and adds it to the list of negatives if
+                # it does NOT satisfy f
+                candidate_neg = [x if random.choice([0, 1]) == 1 else -x for x in range(f.nv)]
+
+
+
         print("Generating negative instances.")
         neg_f_path = os.path.join(neg_dir, 'neg_f.cnf')  # where ~f cnf file will be saved
         neg_f.to_file(neg_f_path)
