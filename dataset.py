@@ -4,6 +4,7 @@ import random
 
 from abc import ABC  # abstract base class
 
+import numpy as np
 import pandas as pd
 from pysat.formula import CNF
 from pysat.solvers import Solver, NoSuchSolverError
@@ -19,10 +20,10 @@ class DatasetGenerator(ABC):
     def prepare_dataset(self, positives, negatives):
         """
         Creates the dataset from the positive and negative samples.
-        Adds the lables, concatenates, shuffles, creates a
+        Adds the labels, concatenates, shuffles, creates a
         dataframe and separate into inputs and labels
-        :param positives:
-        :param negatives:
+        :param positives:list
+        :param negatives:list
         :return: two dataframes: inputs and labels (data_x, data_y)
         """
         print(f'Preparing dataset.')
@@ -48,6 +49,10 @@ class DatasetGenerator(ABC):
         # replaces negatives by 0 and positives by 1
         df.mask(df < 0, 0, inplace=True)
         df.mask(df > 0, 1, inplace=True)
+
+        if df.isin([np.nan, np.inf, -np.inf]).values.any():
+            print("ERROR: there are invalid samples in the dataset. Returning empty.")
+            return [], []
 
         print(f'Generated dataset has {len(df)} instances, all unique.')
 
@@ -161,19 +166,18 @@ class UnigenDatasetGenerator(DatasetGenerator):
         os.makedirs(pos_dir, exist_ok=True)
         os.makedirs(neg_dir, exist_ok=True)
 
-        # gets f and ~f to generate negative samples later:
+        # gets f from the cnf file
         f = CNF(cnf_file)
-        neg_f = f.negate()
 
         print("Generating positive instances.")
         self.run_unigen(cnf_file, pos_dir, max_samples)
         # the file with the positive samples is pos_dir/cnf_file_0.txt
         cnf_name = os.path.splitext(os.path.basename(cnf_file))[0]
         positives = self.recover_samples(os.path.join(pos_dir, f'{cnf_name}_0.txt'))
-        print(f'Sampled {len(positives)} positive instances')
+        print(f'Sampled {len(positives)} unique positive instances')
 
         print("Generating negative instances.")
-        # limits the # of negatives by either max_samples/2 or #positives
+        # limits  #negatives by #positives or max_samples/2
         negatives = self.generate_negative_samples(f, min(len(positives), max_samples // 2))
         print(f'Sampled {len(negatives)} negative instances')
         return self.prepare_dataset(positives, negatives)
@@ -186,7 +190,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         :param max_attempts: maximum number of attempts (prevents infinite loop in case of difficult negative samples)
         :return:
         """
-        negatives = set()
+        negatives = set()  # a set prevents the existence of duplicates
         attempts = 0
         while len(negatives) < max_samples and attempts < max_attempts:
             attempts += 1
@@ -200,6 +204,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
                 # print(f'duplicate {candidate} detected')
                 continue
 
+            # if any clause has all literals disagreeing in sign with the assignment, the candidate falsifies f
             if any([all([candidate[abs(l) - 1] * l < 0 for l in clause]) for clause in f.clauses]):
                 # print(f'{candidate} evaluated to false, adding to negatives')
                 negatives.add(tuple(candidate))
@@ -227,7 +232,9 @@ class UnigenDatasetGenerator(DatasetGenerator):
                 # str_assignments is an array with the variables (asserted or negated)
                 str_assignments = line.strip()[1:].split(' ')[:-1]
                 # appends this assignment to the list of positive (witnesses for f)
-                samples.append([int(x) for x in str_assignments])
+                # the if skips blank lines
+                if len(str_assignments) > 0:
+                    samples.append([int(x) for x in str_assignments])
         return samples
 
     def run_unigen(self, cnf_file, out_dir, max_samples):
