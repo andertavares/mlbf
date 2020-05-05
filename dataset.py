@@ -15,15 +15,16 @@ class DatasetGenerator(ABC):
     An abstract base class to provide a uniform interface for dataset generation
     """
     def generate_dataset(self, cnf_file, max_samples=1000):
-        pass
+        raise NotImplementedError
 
-    def prepare_dataset(self, positives, negatives):
+    def prepare_dataset(self, positives, negatives, save_path=None):
         """
         Creates the dataset from the positive and negative samples.
         Adds the labels, concatenates, shuffles, creates a
         dataframe and separate into inputs and labels
         :param positives:list
         :param negatives:list
+        :param save_path: path to save the generated dataset (pickle format)
         :return: two dataframes: inputs and labels (data_x, data_y)
         """
         print(f'Preparing dataset.')
@@ -35,7 +36,6 @@ class DatasetGenerator(ABC):
         if len(negatives) == 0:
             print("No negative samples. Returning empty dataset")
             return [], []
-
 
         # appends the labels (1 to sat samples, 0 to unsat samples)
         for p in positives:
