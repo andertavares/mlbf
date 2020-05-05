@@ -28,13 +28,22 @@ class DatasetGenerator(ABC):
         """
         print(f'Preparing dataset.')
 
+        # checks the validity of the samples
+        if len(positives) == 0:
+            print("No positives samples. Returning empty dataset")
+            return [], []
+        if len(negatives) == 0:
+            print("No negative samples. Returning empty dataset")
+            return [], []
+
+
         # appends the labels (1 to sat samples, 0 to unsat samples)
         for p in positives:
             p.append(1)
         for n in negatives:
             n.append(0)
 
-        # concats and shuffles the two lists
+        # concats the two lists and shuffles
         all_data = positives + negatives
         # random.seed(2) # uncomment to debug (otherwise each shuffle will give a different array)
         random.shuffle(all_data)
@@ -223,6 +232,10 @@ class UnigenDatasetGenerator(DatasetGenerator):
         :param samples_path:
         :return:
         """
+        if not os.path.exists(samples_path):
+            print(f'Samples file {samples_path} does not exist. Returning empty.')
+            return []
+
         print(f'Recovering samples from {samples_path}')
         samples = []
         with open(samples_path) as sample_file:
