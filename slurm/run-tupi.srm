@@ -18,7 +18,11 @@ nodeset -e $SLURM_JOB_NODELIST
 
 #cd $SLURM_SUBMIT_DIR
 
-#Configura o script
+# copia os arquivos
+cp -r $HOME/mlsat $SCRATCH/mlsat
+
+# configura o script
+cd $SCRATCH/mlsat
 conda activate mlsat
 SCRIPT="python run_instances.py $1 --output $2"
 
@@ -29,3 +33,11 @@ SCRIPT="python run_instances.py $1 --output $2"
 srun --resv-ports  --nodes 1 --ntasks=1 -c 16 $SCRIPT
 
 wait
+
+######## manual alloc & exec:
+# byobu
+# salloc -p tupi -J mlsat -t 1-00:00:00 --exclusive
+# ssh tupi
+# cd mlsat
+# conda activate mlsat
+# srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python run_instances.py $1 --output $2
