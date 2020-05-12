@@ -14,7 +14,7 @@ class DatasetGenerator(ABC):
     """
     An abstract base class to provide a uniform interface for dataset generation
     """
-    def generate_dataset(self, cnf_file, max_samples=1000):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
         raise NotImplementedError
 
     def prepare_dataset(self, positives, negatives, save_path=None):
@@ -65,6 +65,10 @@ class DatasetGenerator(ABC):
 
         print(f'Generated dataset has {len(df)} instances, all unique.')
 
+        if save_path is not None:
+            print(f'Saving dataset to {save_path}.')
+            df.to_pickle(save_path)
+
         # breaks into input features & label
         data_x = df.drop('f', axis=1)
         data_y = df['f']
@@ -87,7 +91,7 @@ class PySATDatasetGenerator(DatasetGenerator):
         """
         self.solver_name = solver_name
 
-    def generate_dataset(self, cnf_file, max_samples=1000):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
         """
         Generates a dataset from the boolean formula in the informed CNF file.
         Particularly, it enumerates all satisfying samples with a SAT solver.
@@ -162,7 +166,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         """
         self.tmp_dir = tmp_dir
 
-    def generate_dataset(self, cnf_file, max_samples=1000):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
         """
         Uses Unigen2 (https://bitbucket.org/kuldeepmeel/unigen) to generate a dataset
         :param cnf_file:
@@ -189,7 +193,11 @@ class UnigenDatasetGenerator(DatasetGenerator):
         # limits  #negatives by #positives or max_samples/2
         negatives = self.generate_negative_samples(f, min(len(positives), max_samples // 2))
         print(f'Sampled {len(negatives)} negative instances')
-        return self.prepare_dataset(positives, negatives)
+
+        # if the user requested to save, the dataset file will be cnf_file.pkl
+        ds_path = f'{os.path.basename(cnf_file)}.pkl' if save_dataset else None
+
+        return self.prepare_dataset(positives, negatives, ds_path)
 
     def generate_negative_samples(self, f, max_samples, max_attempts=100000):
         """

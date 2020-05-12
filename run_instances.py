@@ -6,13 +6,14 @@ import main
 import tarfile
 
 
-def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solver='Glucose3'):
+def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solver='Glucose3', save_dataset=False):
     """
     Extracts all files in a tar.gz file and runs the experiment for each one of them
     :param solver: name of the SAT solver to find the satisfying samples
     :param instances: .tar.gz file containing the .cnf instances
     :param output: path to write results to (csv format)
     :param extraction_point: point to extract the cnf instances
+    :param save_dataset: whether to save the dataset generated from the cnf files
     :return:
     """
     # creates the extraction point if it does not exist
@@ -29,11 +30,11 @@ def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solve
 
         for f in files:
             print(f'Running {f}...')
-            main.main(os.path.join(root, f), output=output, solver=solver)
+            main.main(os.path.join(root, f), output=output, solver=solver, save_dataset=save_dataset)
             print()  # just a newline
-    print(f"Finished all instances. Removing extraction point {extraction_point}.")
-    shutil.rmtree(extraction_point)
-    print('Done')
+    print(f"Finished all instances. Extracted instances and datasets are at {extraction_point}.")
+    # shutil.rmtree(extraction_point)
+    # print('Done')
 
 
 if __name__ == '__main__':

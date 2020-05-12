@@ -13,7 +13,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', model='MLP'):
+def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', model='MLP', save_dataset=False):
     """
     Runs the prototype, executing the following steps:
 
@@ -22,16 +22,17 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', mo
     Trains a classifier on this dataset,
     Writes performance metrics to the standard output
 
-    :param model: learner (MLP or DecisionTree)
     :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
+    :param model: learner (MLP or DecisionTree)
+    :param save_dataset: whether to save the dataset generated from the cnf file
     :return:
     """
     start = datetime.datetime.now()
     #data_generator = dataset.PySATDatasetGenerator(solver_name=solver)
     data_generator = dataset.UnigenDatasetGenerator()
-    data_x, data_y = data_generator.generate_dataset(cnf)
+    data_x, data_y = data_generator.generate_dataset(cnf, save_dataset=save_dataset)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
