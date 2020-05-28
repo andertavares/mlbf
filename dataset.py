@@ -165,6 +165,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         :param tmp_dir: working dir of the sample generator unigen
         """
         self.tmp_dir = tmp_dir
+        self.formula = None  # is assigned in generated_dataset
 
     def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
         """
@@ -181,6 +182,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
 
         # gets f from the cnf file
         f = CNF(cnf_file)
+        self.formula = f
 
         print("Generating positive instances.")
         self.run_unigen(cnf_file, pos_dir, max_samples)
@@ -255,7 +257,11 @@ class UnigenDatasetGenerator(DatasetGenerator):
                 # appends this assignment to the list of positive (witnesses for f)
                 # the if skips blank lines
                 if len(str_assignments) > 0:
-                    samples.append([int(x) for x in str_assignments])
+                    sample = [int(x) for x in str_assignments]
+                    if len(sample) < self.formula.nv: # only indep. support has been assigned
+                        sample = self.fill_dependent_variables(sample)
+
+                    samples.append()
         return samples
 
     def run_unigen(self, cnf_file, out_dir, max_samples):
@@ -291,3 +297,40 @@ class UnigenDatasetGenerator(DatasetGenerator):
             print("WARNING! there has been some error with unigen's execution. "
                   "Please check the output above.")
         os.chdir(current_dir)
+
+    def fill_dependent_variables(self, sample):
+        """
+        Fills the dependent variables of an incomplete sample
+        :param sample:
+        :return:
+        """
+        # known support: dict(variable -> value) --- value > 0 == True
+        known_support = {abs(literal): literal for literal in sample}
+
+        # puts clauses in set of tuples to ease removal
+        clauses = set([tuple(c) for c in self.formula.clauses])
+
+        while len(known_support) < self.formula.nv:
+            # all clauses must evaluate to true
+            for clause in clauses:
+                # if all variables are in the known support, remove the clause & go to next
+                if all([abs(l) in known_support for l in clause]):
+                    clauses.remove(clause)
+                    continue
+
+                # if known variables already make the clause true, ignore & go to next
+                clause_solved = False
+                missing_literals = []
+                for l in clause:
+                    if l not in known_support:
+                        missing_literals.append(l)
+                    elif known_support[l] * l > 0:  # if variable value & literal agree on sign, it evaluates to True
+                        clause_solved = True
+
+                # if clause is not solved and only 1 literal is missing, determine its value
+                if not clause_solved and len(missing_literals) == 1:
+                    # the corresponding value of the variable is the literal itself
+                    known_support[abs(missing_literals[0])] = missing_literals[0]
+
+            # returns the full assignment with variables sorted according to their index (abs. value)
+            return sorted(known_support.values(), key=lambda x: abs(x))
