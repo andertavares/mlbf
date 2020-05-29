@@ -258,10 +258,11 @@ class UnigenDatasetGenerator(DatasetGenerator):
                 # the if skips blank lines
                 if len(str_assignments) > 0:
                     sample = [int(x) for x in str_assignments]
-                    if len(sample) < self.formula.nv: # only indep. support has been assigned
-                        sample = self.fill_dependent_variables(sample)
+                    # fragment below commented out because unigen was changed to return assignment for all vars
+                    #if len(sample) < self.formula.nv: # only indep. support has been assigned
+                    #    sample = self.fill_dependent_variables(sample)
 
-                    samples.append()
+                    samples.append(sample)
         return samples
 
     def run_unigen(self, cnf_file, out_dir, max_samples):
