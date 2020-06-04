@@ -80,6 +80,33 @@ class TestDataset(unittest.TestCase):
         # checks if the returned set of negatives is correct
         self.assertEqual(expected_negatives, neg_set)
 
+    def test_unigen_retrieve_samples(self):
+        """
+        Emulates a file created by unigen and tests whether
+        the samples there are correctly retrieved
+        :return:
+        """
+
+        # suppose this formula: f = CNF(from_clauses=[[-1, 2], [3]])
+        # here are the 3 positive samples:
+        expected_positives = { # set of tuples
+            (-1, 2, 3),
+            (-1, -2, 3),
+            (1, 2, 3),
+        }
+
+        # I'll save it in a temp file with the Unigen2 format: v1 2 ... N 0:M
+        with open('/tmp/retrieval_test.txt', 'w') as sample_file:
+            for pos in expected_positives:
+                sample_file.write(f"v{' '.join([str(lit) for lit in pos])} 0:1\n")
+
+        sampler = dataset.UnigenDatasetGenerator()
+        retrieved = sampler.retrieve_samples('/tmp/retrieval_test.txt')
+        # transforms the list of lists in a set of tuples for comparison
+        retrieved_set = set([tuple([lit for lit in pos]) for pos in retrieved])
+
+        self.assertEqual(expected_positives, retrieved_set)
+
 
 if __name__ == '__main__':
     unittest.main()
