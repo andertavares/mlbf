@@ -42,4 +42,4 @@ wait
 # conda activate mlsat
 # srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python run_instances.py $1 --output $2
 
-# specific ones: for i in instances/tacas15/*.cnf; do srun --resv-ports  --nodes 1 --ntasks=1 -c 48 python main.py $i --output tacas15.csv; done
+# tacas15: for i in instances/tacas15/*.cnf; do srun --resv-ports  --nodes 1 --ntasks=1 -c 48 python main.py $i --output tacas15.csv; done
