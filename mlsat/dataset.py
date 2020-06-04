@@ -55,7 +55,7 @@ class DatasetGenerator(ABC):
             print('ERROR: there are duplicate inputs in the dataset. Returning empty.')
             return [], []
 
-        # replaces negatives by 0 and positives by 1
+        # replaces negated by 0 and asserted by 1
         df.mask(df < 0, 0, inplace=True)
         df.mask(df > 0, 1, inplace=True)
 
@@ -288,7 +288,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         import unigen and instantiate its parameters directly
         '''
 
-        os.chdir('unigen')
+        os.chdir('../unigen')
         # calls unigen on the formula from cnf_file
         ret_code = subprocess.call(
             f'python UniGen2.py -samples={max_samples // 2} -runIndex=0 '
