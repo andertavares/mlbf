@@ -10,7 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', model='MLP', save_dataset=False):
+def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=False):
     """
     Runs the prototype, executing the following steps:
 
@@ -23,19 +23,20 @@ def main(cnf='instances/bw_large.d.cnf', solver='Glucose3', output='out.csv', mo
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
     :param model: learner (MLP or DecisionTree)
-    :param save_dataset: whether to save the dataset generated from the cnf file
+    :param save_dataset: if True, saves the dataset as 'input.cnf.pkl'
     :return:
     """
     start = datetime.datetime.now()
-    #data_generator = dataset.PySATDatasetGenerator(solver_name=solver)
-    data_generator = dataset.UnigenDatasetGenerator()
+
+    data_generator = dataset.UnigenDatasetGenerator() if solver == 'unigen' else dataset.PySATDatasetGenerator(solver_name=solver)
     data_x, data_y = data_generator.generate_dataset(cnf, save_dataset=save_dataset)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
         return
 
-    learner = DecisionTreeClassifier()
+    # change class_weight to accomodate for imbalanced dataset+
+    learner = DecisionTreeClassifier(criterion='entropy', class_weight='balanced')
     if model == 'MLP':
         learner = MLPClassifier(hidden_layer_sizes=(200, 100))
 
