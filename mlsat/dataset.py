@@ -288,7 +288,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         import unigen and instantiate its parameters directly
         '''
 
-        os.chdir('../unigen')
+        os.chdir('unigen')
         # calls unigen on the formula from cnf_file
         ret_code = subprocess.call(
             f'python UniGen2.py -samples={max_samples // 2} -runIndex=0 '
