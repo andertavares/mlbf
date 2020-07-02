@@ -10,7 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=False):
+def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True):
     """
     Runs the prototype, executing the following steps:
 

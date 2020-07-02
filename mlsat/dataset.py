@@ -14,7 +14,7 @@ class DatasetGenerator(ABC):
     """
     An abstract base class to provide a uniform interface for dataset generation
     """
-    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=True):
         raise NotImplementedError
 
     def prepare_dataset(self, positives, negatives, save_path=None):
@@ -24,7 +24,7 @@ class DatasetGenerator(ABC):
         dataframe and separate into inputs and labels
         :param positives:list
         :param negatives:list
-        :param save_path: path to save the generated dataset (pickle format)
+        :param save_path: path to save the generated dataset (gzipped pickle format)
         :return: two dataframes: inputs and labels (data_x, data_y)
         """
         print(f'Preparing dataset.')
@@ -91,7 +91,7 @@ class PySATDatasetGenerator(DatasetGenerator):
         """
         self.solver_name = solver_name
 
-    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=True):
         """
         Generates a dataset from the boolean formula in the informed CNF file.
         Particularly, it enumerates all satisfying samples with a SAT solver.
@@ -103,6 +103,7 @@ class PySATDatasetGenerator(DatasetGenerator):
         The second dataframe contains the corresponding binary label (0/1) for unsat/sat,
         respectively.
 
+        :param save_dataset: if True, saves the dataset as cnf_file.pkl
         :param cnf_file: path to the file in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
         :param max_samples: maximum number of samples, half of them will be positive, half negative
         :return: tuple with 2 dataframes: inputs and labels
@@ -155,7 +156,10 @@ class PySATDatasetGenerator(DatasetGenerator):
 
         # uncomment below to test duplicates
         # sat_list.append(sat_list[0])
-        return self.prepare_dataset(sat_list, unsat_list)
+
+        # if the user requested to save, the dataset file will be cnf_file.pkl
+        ds_path = f'{cnf_file}.pkl.gz' if save_dataset else None
+        return self.prepare_dataset(sat_list, unsat_list, ds_path)
 
 
 class UnigenDatasetGenerator(DatasetGenerator):
@@ -167,11 +171,12 @@ class UnigenDatasetGenerator(DatasetGenerator):
         self.tmp_dir = tmp_dir
         self.formula = None  # is assigned in generated_dataset
 
-    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=False):
+    def generate_dataset(self, cnf_file, max_samples=1000, save_dataset=True):
         """
         Uses Unigen2 (https://bitbucket.org/kuldeepmeel/unigen) to generate a dataset
         :param cnf_file:
         :param max_samples:
+        :param save_dataset: if True, saves the dataset as cnf_file.pkl.gz
         :return:
         """
         # makes sure that unigen working dir exists for positive and negative samples
@@ -197,7 +202,7 @@ class UnigenDatasetGenerator(DatasetGenerator):
         print(f'Sampled {len(negatives)} negative instances')
 
         # if the user requested to save, the dataset file will be cnf_file.pkl
-        ds_path = f'{os.path.basename(cnf_file)}.pkl' if save_dataset else None
+        ds_path = f'{cnf_file}.pkl.gz' if save_dataset else None
 
         return self.prepare_dataset(positives, negatives, ds_path)
 
