@@ -23,7 +23,7 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
     :param model: learner (MLP or DecisionTree)
-    :param save_dataset: if True, saves the dataset as 'input.cnf.pkl'
+    :param save_dataset: if True, saves the dataset as 'input.cnf.pkl.gz'
     :return:
     """
     start = datetime.datetime.now()
