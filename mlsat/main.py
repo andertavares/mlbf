@@ -59,7 +59,7 @@ def write_header(output):
     """
     if output is not None and not os.path.exists(output):
         with open(output, 'w') as out:
-            out.write('dataset,solver,learner,accuracy,precision,start,finish\n')
+            out.write('dataset,sampler,learner,accuracy,precision,start,finish\n')
 
 
 def run_model(model, data_x, data_y, splitter):
