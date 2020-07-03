@@ -2,6 +2,7 @@ import os
 from pysat.formula import CNF
 import unittest
 
+import mlsat.positives
 from mlsat import dataset
 
 
@@ -21,7 +22,7 @@ class TestDataset(unittest.TestCase):
             [1, -2, 3],
             [1, -2, -3]
         ]
-        generator = dataset.DatasetGenerator()
+        generator = mlsat.positives.PositiveSampler()
         data_x, data_y = generator.prepare_dataset(positives, negatives)
         self.assertEqual(4, len(data_x))
         self.assertEqual(4, len(data_y))
@@ -47,7 +48,7 @@ class TestDataset(unittest.TestCase):
             (1, 2, -3)
         }
 
-        sampler = dataset.UnigenDatasetGenerator()
+        sampler = mlsat.positives.UnigenSampler()
         negatives = sampler.generate_negative_samples(f, 5)  # 5 is the max number of negatives
         self.assertEqual(5, len(negatives))
 
@@ -68,7 +69,7 @@ class TestDataset(unittest.TestCase):
             (1, 2, -3)
         }
 
-        sampler = dataset.UnigenDatasetGenerator()
+        sampler = mlsat.positives.UnigenSampler()
         # 5 is the max number of negatives, with 20 it will reach max attempts
         negatives = sampler.generate_negative_samples(f, 20, max_attempts=200000)
         self.assertEqual(5, len(negatives))
@@ -100,7 +101,7 @@ class TestDataset(unittest.TestCase):
             for pos in expected_positives:
                 sample_file.write(f"v{' '.join([str(lit) for lit in pos])} 0:1\n")
 
-        sampler = dataset.UnigenDatasetGenerator()
+        sampler = mlsat.positives.UnigenSampler()
         retrieved = sampler.retrieve_samples('/tmp/retrieval_test.txt')
         # transforms the list of lists in a set of tuples for comparison
         retrieved_set = set([tuple([lit for lit in pos]) for pos in retrieved])
@@ -124,10 +125,10 @@ class TestDataset(unittest.TestCase):
         '''
         f.to_file('/tmp/test_small.cnf')
 
-        sampler = dataset.UnigenDatasetGenerator()
+        sampler = mlsat.positives.UnigenSampler()
 
         # a formula with very few solutions will return an empty dataset
-        data_x, data_y = sampler.generate_dataset('/tmp/test_small.cnf', 50)
+        data_x, data_y = sampler.sample('/tmp/test_small.cnf', 50)
         self.assertEqual(0, len(data_x))
         self.assertEqual(0, len(data_y))
 
@@ -213,8 +214,8 @@ class TestDataset(unittest.TestCase):
         }
         f.to_file('/tmp/test.cnf')
 
-        sampler = dataset.UnigenDatasetGenerator()
-        data_x, data_y = sampler.generate_dataset('/tmp/test.cnf', 500)
+        sampler = mlsat.positives.UnigenSampler()
+        data_x, data_y = sampler.sample('/tmp/test.cnf', 500)
 
         # I expect the dataset to contain all 64 possible assignments
         self.assertEqual(64, len(data_x))

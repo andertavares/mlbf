@@ -28,15 +28,14 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
     """
     start = datetime.datetime.now()
 
-    data_generator = dataset.UnigenDatasetGenerator() if solver == 'unigen' else dataset.PySATDatasetGenerator(solver_name=solver)
-    data_x, data_y = data_generator.generate_dataset(cnf, save_dataset=save_dataset)
+    data_x, data_y = dataset.generate_dataset(cnf, solver)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
         return
 
     # change class_weight to accomodate for imbalanced dataset+
-    learner = DecisionTreeClassifier(criterion='entropy', class_weight='balanced')
+    learner = DecisionTreeClassifier(criterion='entropy',)
     if model == 'MLP':
         learner = MLPClassifier(hidden_layer_sizes=(200, 100))
 
