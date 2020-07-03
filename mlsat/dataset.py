@@ -74,6 +74,8 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     negatives = negative_sampler.uniformly_negative_samples(cnf, num_negatives)
     df = prepare_dataset(positives, negatives)
 
+    print(f'{len(df)} instances generated for {cnf}')
+
     if save_dataset:
         dataset_output = f'{cnf}_{solver}_{len(positives)}_{len(negatives)}.pkl.gz'
         if not overwrite and os.path.exists(dataset_output):
@@ -86,10 +88,22 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     data_x = df.drop('f', axis=1)
     data_y = df['f']
 
-    print(f'{len(data_x)} instances generated for {cnf}')
-
     return data_x, data_y
 
 
+def cli_generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
+    """
+    This function just calls 'generate_dataset' but does not return data for cleaner use with fire.Fire
+     :param cnf: path to the boolean formula in DIMACS CNF format
+    :param solver: unigen or the name of a PySAT solver
+    :param num_positives: number of positive samples
+    :param num_negatives: number of negative samples
+    :param save_dataset: if True, saves the dataset as cnf_solver_pos_neg.pkl.gz, where pos & neg are the actual number of samples
+    :param overwrite: if True, overwrites an existing datset
+    :return:
+    """
+    generate_dataset(cnf, solver, num_positives, num_negatives, save_dataset, overwrite)
+
+
 if __name__ == '__main__':
-    fire.Fire(generate_dataset)
+    fire.Fire(cli_generate_dataset)
