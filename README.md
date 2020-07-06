@@ -22,6 +22,7 @@ Then you just need to clone this repository:
 `git clone https://github.com/andertavares/mlsat.git` and enter the new directory `mlsat` to be able to execute.
 
 ## Execution
+__[outdated i.e. not valid for the current version!]__
 
 * Single instance: 
 `python main.py cnf=path_to_cnf_file --solver=SolverName --output=output_file`
