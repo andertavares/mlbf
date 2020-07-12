@@ -1,5 +1,5 @@
 # MLSat
-Machine Learning on SATisfiability
+Machine Learning on Boolean Formulas
 
 Currently a working prototype that implements part of Moshe Vardi's idea (e.g. it does a different approach on 2):
 
