@@ -171,7 +171,7 @@ class UnigenSampler(PositiveSampler):
         os.chdir('unigen')
         # calls unigen on the formula from cnf_file
         ret_code = subprocess.call(  # using a 5h (18k seconds) timeout
-            f'python UniGen2.py -samples={max_samples // 2} -runIndex=0 -timeout 18000'
+            f'python UniGen2.py -samples={max_samples} -runIndex=0 -timeout=18000 '
             f'{cnf_abspath} {out_dir}'.split(' ')  # split because call accepts an array
         )
         if ret_code != 0:
