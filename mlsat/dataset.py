@@ -75,7 +75,7 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     df = prepare_dataset(positives, negatives)
 
     print(f'{len(df)} instances generated for {cnf}')
-
+    # FIXME do not save if there are no instances
     if save_dataset:
         dataset_output = f'{cnf}_{solver}_{len(positives)}_{len(negatives)}.pkl.gz'
         if not overwrite and os.path.exists(dataset_output):
