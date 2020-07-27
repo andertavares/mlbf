@@ -6,9 +6,9 @@ from pysat.formula import CNF
 
 # not proud of this hack but I just can't manage the imports work as intended without it
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mlsat'))
-from mlsat import dataset
 import mlsat.positives
-import mlsat.dataset
+import mlsat.negatives
+import mlsat.dataset as dataset
 
 
 class TestDataset(unittest.TestCase):
@@ -43,7 +43,8 @@ class TestDataset(unittest.TestCase):
         self.assertIn([1, 0, 1, 0], df.values)  # 1,-2,3 negative
         self.assertIn([1, 0, 0, 0], df.values)  # 1,-2,-3 negative
 
-    def test_unigen_negative_simple(self):
+    def test_negative_simple(self):
+        cnf_file = '/tmp/simple_negative.cnf'
         f = CNF(from_clauses=[[-1, 2], [3]])
         expected_negatives = {  # set of tuples, contains all unsat assignments for the formula
             (1, -2, 3),
@@ -52,9 +53,9 @@ class TestDataset(unittest.TestCase):
             (1, -2, -3),
             (1, 2, -3)
         }
+        f.to_file(cnf_file)
 
-        sampler = mlsat.positives.UnigenSampler()
-        negatives = sampler.generate_negative_samples(f, 5)  # 5 is the max number of negatives
+        negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 5)  # 5 is the max number of negatives
         self.assertEqual(5, len(negatives))
 
         # checks if all negatives are unique: transform into set and see if the length did not reduce
@@ -63,8 +64,10 @@ class TestDataset(unittest.TestCase):
 
         # checks if the returned set of negatives is correct
         self.assertEqual(expected_negatives, neg_set)
+        os.unlink(cnf_file)
 
-    def test_unigen_negative_max_attempts(self):
+    def test_negative_max_attempts(self):
+        cnf_file = '/tmp/test_max_attempts.cnf'
         f = CNF(from_clauses=[[-1, 2], [3]])
         expected_negatives = {  # set of tuples, contains all unsat assignments for the formula
             (1, -2, 3),
@@ -73,10 +76,10 @@ class TestDataset(unittest.TestCase):
             (1, -2, -3),
             (1, 2, -3)
         }
+        f.to_file(cnf_file)
 
-        sampler = mlsat.positives.UnigenSampler()
         # 5 is the max number of negatives, with 20 it will reach max attempts
-        negatives = sampler.generate_negative_samples(f, 20, max_attempts=200000)
+        negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 20, max_attempts=200000)
         self.assertEqual(5, len(negatives))
 
         # checks if all negatives are unique: transform into set and see if the length did not reduce
@@ -85,6 +88,9 @@ class TestDataset(unittest.TestCase):
 
         # checks if the returned set of negatives is correct
         self.assertEqual(expected_negatives, neg_set)
+
+        # removes the temporary file
+        os.unlink(cnf_file)
 
     def test_unigen_retrieve_samples(self):
         """
@@ -114,7 +120,7 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(expected_positives, retrieved_set)
 
     def test_unigen_generate_dataset_small_formula(self):
-
+        cnf_file = '/tmp/test_small.cnf'
         f = CNF(from_clauses=[[1, 2, 3], [4]])
         '''
         the formula above has 7 positive samples:
@@ -128,19 +134,19 @@ class TestDataset(unittest.TestCase):
             (-1, -2, 3, 4),
         }
         '''
-        f.to_file('/tmp/test_small.cnf')
+        f.to_file(cnf_file)
 
         sampler = mlsat.positives.UnigenSampler()
 
         # a formula with very few solutions will return an empty dataset
-        data_x, data_y = sampler.sample('/tmp/test_small.cnf', 50)
-        self.assertEqual(0, len(data_x))
-        self.assertEqual(0, len(data_y))
+        data = sampler.sample(cnf_file, 50)
+        self.assertEqual(0, len(data))
 
         # deletes the temp file used to store the formula
-        os.unlink('/tmp/test_small.cnf')
+        os.unlink(cnf_file)
 
     def test_unigen_generate_dataset(self):
+        cnf_file = '/tmp/test.cnf'
         f = CNF(from_clauses=[[1, 2, 3, 4], [5, 6]])
         # the formula above has 45 positive & 19 negative samples
         # positives enumerated below (with Glucose3)
@@ -217,10 +223,13 @@ class TestDataset(unittest.TestCase):
             (1, 2, 3, -4, -5, -6),
             (1, 2, 3, 4, -5, -6),
         }
-        f.to_file('/tmp/test.cnf')
+        f.to_file(cnf_file)
 
         sampler = mlsat.positives.UnigenSampler()
-        data_x, data_y = mlsat.dataset.get_xy_data(sampler.sample('/tmp/test.cnf', 500))
+        sampled_positives = sampler.sample(cnf_file, 500)
+        sampled_negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 500)
+
+        data_x, data_y = dataset.get_xy_data(dataset.prepare_dataset(sampled_positives, sampled_negatives))
 
         # I expect the dataset to contain all 64 possible assignments
         self.assertEqual(64, len(data_x))
@@ -243,7 +252,7 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(binary_pos.union(binary_neg), dataset_set)
 
         # deletes the temp file used to store the formula
-        os.unlink('/tmp/test.cnf')
+        os.unlink(cnf_file)
 
 
 if __name__ == '__main__':
