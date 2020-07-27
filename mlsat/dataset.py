@@ -1,7 +1,9 @@
 import os
 import random
 
+import glob
 import fire
+import random
 import numpy as np
 import pandas as pd
 
@@ -55,6 +57,47 @@ def prepare_dataset(positives, negatives):
         return [], []
 
     return df
+
+
+def dataset_exists(cnf):
+    """
+    Tells whether a dataset for the given CNF file exists
+    :param cnf:
+    :return:
+    """
+    return len(glob.glob(f'{cnf}_*.pkl.gz')) > 0
+
+
+def retrieve_dataset(cnf):
+    """
+    Attempts to retrieve a dataset of a given CNF file.
+    If more than one dataset exists (i.e. multiple files
+    match the pattern {cnf}_*.pkl.gz), one is returned at random.
+    :param cnf:
+    :return:tuple of 2 pandas dataframes
+    """
+    if not dataset_exists(cnf):
+        raise ValueError(f"There is no dataset for {cnf}")
+
+    dataset_files = glob.glob(f'{cnf}_*.pkl.gz')
+    df = pd.read_pickle(random.choice(dataset_files), compression='gzip')
+
+    # breaks into input features & label
+    return get_xy_data(df)
+
+
+def get_xy_data(dataframe):
+    """
+    Breaks the dataframe into features and label
+    and returns these two dataframes
+    :param dataframe:
+    :return: tuple of dataframes
+    """
+    # breaks into input features & label
+    data_x = dataframe.drop('f', axis=1)
+    data_y = dataframe['f']
+
+    return data_x, data_y
 
 
 def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
