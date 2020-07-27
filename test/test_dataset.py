@@ -1,9 +1,14 @@
 import os
-from pysat.formula import CNF
+import sys
 import unittest
 
-import mlsat.positives
+from pysat.formula import CNF
+
+# not proud of this hack but I just can't manage the imports work as intended without it
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mlsat'))
 from mlsat import dataset
+import mlsat.positives
+import mlsat.dataset
 
 
 class TestDataset(unittest.TestCase):
@@ -22,8 +27,8 @@ class TestDataset(unittest.TestCase):
             [1, -2, 3],
             [1, -2, -3]
         ]
-        generator = mlsat.positives.PositiveSampler()
-        data_x, data_y = generator.prepare_dataset(positives, negatives)
+        data = mlsat.dataset.prepare_dataset(positives, negatives)
+        data_x, data_y = mlsat.dataset.get_xy_data(data)
         self.assertEqual(4, len(data_x))
         self.assertEqual(4, len(data_y))
 
@@ -215,7 +220,7 @@ class TestDataset(unittest.TestCase):
         f.to_file('/tmp/test.cnf')
 
         sampler = mlsat.positives.UnigenSampler()
-        data_x, data_y = sampler.sample('/tmp/test.cnf', 500)
+        data_x, data_y = mlsat.dataset.get_xy_data(sampler.sample('/tmp/test.cnf', 500))
 
         # I expect the dataset to contain all 64 possible assignments
         self.assertEqual(64, len(data_x))
