@@ -167,8 +167,9 @@ class UnigenSampler(PositiveSampler):
         We'll call python from the command line as it is not straightforward to 
         import unigen and instantiate its parameters directly
         '''
+        unigen_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'unigen')
+        os.chdir(unigen_dir)
 
-        os.chdir('unigen')
         # calls unigen on the formula from cnf_file
         ret_code = subprocess.call(  # using a 5h (18k seconds) timeout
             f'python UniGen2.py -samples={max_samples} -runIndex=0 -timeout=600 '

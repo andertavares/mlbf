@@ -28,6 +28,7 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
     """
     start = datetime.datetime.now()
 
+    # TODO check if dataset already exists
     data_x, data_y = dataset.generate_dataset(cnf, solver)
 
     if len(data_x) < 100:
