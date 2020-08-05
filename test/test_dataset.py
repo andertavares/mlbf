@@ -5,10 +5,10 @@ import unittest
 from pysat.formula import CNF
 
 # not proud of this hack but I just can't manage the imports work as intended without it
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mlsat'))
-import mlsat.positives
-import mlsat.negatives
-import mlsat.dataset as dataset
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mlbf'))
+import mlbf.positives
+import mlbf.negatives
+import mlbf.dataset as dataset
 
 
 class TestDataset(unittest.TestCase):
@@ -27,8 +27,8 @@ class TestDataset(unittest.TestCase):
             [1, -2, 3],
             [1, -2, -3]
         ]
-        data = mlsat.dataset.prepare_dataset(positives, negatives)
-        data_x, data_y = mlsat.dataset.get_xy_data(data)
+        data = mlbf.dataset.prepare_dataset(positives, negatives)
+        data_x, data_y = mlbf.dataset.get_xy_data(data)
         self.assertEqual(4, len(data_x))
         self.assertEqual(4, len(data_y))
 
@@ -55,7 +55,7 @@ class TestDataset(unittest.TestCase):
         }
         f.to_file(cnf_file)
 
-        negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 5)  # 5 is the max number of negatives
+        negatives = mlbf.negatives.uniformly_negative_samples(cnf_file, 5)  # 5 is the max number of negatives
         self.assertEqual(5, len(negatives))
 
         # checks if all negatives are unique: transform into set and see if the length did not reduce
@@ -79,7 +79,7 @@ class TestDataset(unittest.TestCase):
         f.to_file(cnf_file)
 
         # 5 is the max number of negatives, with 20 it will reach max attempts
-        negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 20, max_attempts=200000)
+        negatives = mlbf.negatives.uniformly_negative_samples(cnf_file, 20, max_attempts=200000)
         self.assertEqual(5, len(negatives))
 
         # checks if all negatives are unique: transform into set and see if the length did not reduce
@@ -112,7 +112,7 @@ class TestDataset(unittest.TestCase):
             for pos in expected_positives:
                 sample_file.write(f"v{' '.join([str(lit) for lit in pos])} 0:1\n")
 
-        sampler = mlsat.positives.UnigenSampler()
+        sampler = mlbf.positives.UnigenSampler()
         retrieved = sampler.retrieve_samples('/tmp/retrieval_test.txt')
         # transforms the list of lists in a set of tuples for comparison
         retrieved_set = set([tuple([lit for lit in pos]) for pos in retrieved])
@@ -136,7 +136,7 @@ class TestDataset(unittest.TestCase):
         '''
         f.to_file(cnf_file)
 
-        sampler = mlsat.positives.UnigenSampler()
+        sampler = mlbf.positives.UnigenSampler()
 
         # a formula with very few solutions will return an empty dataset
         data = sampler.sample(cnf_file, 50)
@@ -225,9 +225,9 @@ class TestDataset(unittest.TestCase):
         }
         f.to_file(cnf_file)
 
-        sampler = mlsat.positives.UnigenSampler()
+        sampler = mlbf.positives.UnigenSampler()
         sampled_positives = sampler.sample(cnf_file, 500)
-        sampled_negatives = mlsat.negatives.uniformly_negative_samples(cnf_file, 500)
+        sampled_negatives = mlbf.negatives.uniformly_negative_samples(cnf_file, 500)
 
         data_x, data_y = dataset.get_xy_data(dataset.prepare_dataset(sampled_positives, sampled_negatives))
 
