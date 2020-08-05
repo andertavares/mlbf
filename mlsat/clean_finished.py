@@ -1,7 +1,6 @@
-
-
 import os
 import glob
+import fire
 
 def clean_finished(dir):
     """
@@ -15,3 +14,6 @@ def clean_finished(dir):
         if len(glob.glob(f'{dir}/{f}*.pkl.gz')) > 0:
             print(f, 'exists, removing')
             os.unlink(f'{dir}/{f}')
+
+if __name__ == '__main__':
+    fire.Fire(clean_finished)
