@@ -1,16 +1,18 @@
 import datetime
 import os
 import fire
+
+import numpy as np
 from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import StratifiedKFold, cross_validate
+from sklearn.metrics import accuracy_score, precision_score
 
 import dataset
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf, solver='unigen', output='out.csv', model='MLP',
+def main(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
          mlp_layers=[200,100], mlp_activation='relu', save_dataset=True):
     """
     Runs the prototype, executing the following steps:
@@ -23,6 +25,7 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP',
     :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
+    :param cvfolds: number of folds for cross-validation
     :param model: learner (MLP or DecisionTree)
     :param mlp_layers: list with #neurons in each hidden layer (from command line, pass it without spaces e.g. [200,100,50])
     :param mlp_activation: MLP's activation function
@@ -42,16 +45,19 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP',
     if model == 'MLP':
         learner = MLPClassifier(hidden_layer_sizes=mlp_layers, activation=mlp_activation)
 
-    splitter = StratifiedKFold(n_splits=5)
-
     write_header(output)
+
+    scoring = ['accuracy', 'f1_macro']
+    scores = cross_validate(learner, data_x, data_y, cv=5, scoring=scoring)
 
     with open(output, 'a') as outstream:
         # gathers accuracy and precision by running the model and writes it to output
-        acc, prec = run_model(learner, data_x, data_y, splitter)
+        # print(scores)
+        acc, f1 = np.mean(scores['test_accuracy']), np.mean(scores['test_f1_macro']) #run_model(learner, data_x, data_y, splitter)
+        std_acc, std_f1 = np.std(scores['test_accuracy']), np.std(scores['test_f1_macro'])
         finish = datetime.datetime.now()
         model_str = model if model != 'MLP' else f'{model}_{mlp_activation}_{mlp_layers}'
-        outstream.write(f'{os.path.basename(cnf)},{solver},{model_str},{acc},{prec},{start},{finish}\n')
+        outstream.write(f'{os.path.basename(cnf)},{solver},{model_str},{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish}\n')
 
 
 def write_header(output):
@@ -62,7 +68,7 @@ def write_header(output):
     """
     if output is not None and not os.path.exists(output):
         with open(output, 'w') as out:
-            out.write('dataset,sampler,learner,accuracy,precision,start,finish\n')
+            out.write('dataset,sampler,learner,cvfolds,mean_acc,std_acc,mean_f1_macro,std_f1,start,finish\n')
 
 
 def run_model(model, data_x, data_y, splitter):
