@@ -22,14 +22,6 @@ def prepare_dataset(positives, negatives):
     """
     print(f'Preparing dataset.')
 
-    # checks the validity of the samples
-    if len(positives) == 0:
-        print("No positives samples. Returning empty dataset")
-        return [], []
-    if len(negatives) == 0:
-        print("No negative samples. Returning empty dataset")
-        return [], []
-
     # appends the labels (1 to sat samples, 0 to unsat samples)
     for p in positives:
         p.append(1)
@@ -54,7 +46,7 @@ def prepare_dataset(positives, negatives):
 
     if df.isin([np.nan, np.inf, -np.inf]).values.any():
         print("ERROR: there are invalid samples in the dataset. Returning empty.")
-        return [], []
+        return pd.DataFrame()
 
     return df
 
@@ -125,11 +117,19 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
 
     positive_sampler = UnigenSampler() if solver == 'unigen' else PySATSampler(solver_name=solver)
     positives = positive_sampler.sample(cnf, num_positives)
+
+    # checks the validity of the samples
+    if len(positives) == 0:
+        print(f"WARNING: No positives samples for {cnf}. Returning empty dataset...")
+        return [], []
+
     negatives = negative_sampler.uniformly_negative_samples(cnf, num_negatives)
+    if len(negatives) == 0:
+        print("WARNING: No negative samples for {cnf}. Returning empty dataset...")
+        return [], []
     df = prepare_dataset(positives, negatives)
 
     print(f'{len(df)} instances generated for {cnf}')
-    # FIXME do not save if there are no instances
     if save_dataset:
         dataset_output = f'{cnf}_{solver}_{len(positives)}_{len(negatives)}.pkl.gz'
         if not overwrite and os.path.exists(dataset_output):
@@ -145,7 +145,7 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     return data_x, data_y
 
 
-def cli_generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
+def cli_generate_dataset(*cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
     """
     This function just calls 'generate_dataset' but does not return data for cleaner use with fire.Fire
      :param cnf: path to the boolean formula in DIMACS CNF format
@@ -156,7 +156,8 @@ def cli_generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=
     :param overwrite: if True, overwrites an existing datset
     :return:
     """
-    generate_dataset(cnf, solver, num_positives, num_negatives, save_dataset, overwrite)
+    for formula in cnf:
+        generate_dataset(formula, solver, num_positives, num_negatives, save_dataset, overwrite)
 
 
 if __name__ == '__main__':
