@@ -31,10 +31,7 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP',
     """
     start = datetime.datetime.now()
 
-    if dataset.dataset_exists(cnf):
-        data_x, data_y = dataset.retrieve_dataset(cnf)
-    else:
-        data_x, data_y = dataset.generate_dataset(cnf, solver)
+    data_x, data_y = dataset.get_dataset(cnf, solver)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')

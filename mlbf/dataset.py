@@ -68,7 +68,18 @@ def dataset_exists(cnf):
     return len(glob.glob(f'{cnf}_*.pkl.gz')) > 0
 
 
-def retrieve_dataset(cnf):
+def get_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
+    """
+    Returns an existing dataset for the given formula if one exists.
+    Otherwise, generates a new dataset with the solver and specified parameters
+    """
+    if dataset_exists(cnf):
+        return read_dataset(cnf)
+    else:
+        return generate_dataset(cnf, solver, num_positives, num_negatives, save_dataset, overwrite)
+
+
+def read_dataset(cnf):
     """
     Attempts to retrieve a dataset of a given CNF file.
     If more than one dataset exists (i.e. multiple files
