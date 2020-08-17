@@ -10,7 +10,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score
 
 
-def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True):
+def main(cnf, solver='unigen', output='out.csv', model='MLP',
+         mlp_layers=[200,100], mlp_activation='relu', save_dataset=True):
     """
     Runs the prototype, executing the following steps:
 
@@ -23,13 +24,17 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
     :param solver: name of the SAT solver to find the satisfying samples
     :param output: path to output file
     :param model: learner (MLP or DecisionTree)
+    :param mlp_layers: list with #neurons in each hidden layer (from command line, pass it without spaces e.g. [200,100,50])
+    :param mlp_activation: MLP's activation function
     :param save_dataset: if True, saves the dataset as 'input.cnf.pkl.gz'
     :return:
     """
     start = datetime.datetime.now()
 
-    # TODO check if dataset already exists
-    data_x, data_y = dataset.generate_dataset(cnf, solver)
+    if dataset.dataset_exists(cnf):
+        data_x, data_y = dataset.retrieve_dataset(cnf)
+    else:
+        data_x, data_y = dataset.generate_dataset(cnf, solver)
 
     if len(data_x) < 100:
         print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
@@ -38,7 +43,7 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
     # change class_weight to accomodate for imbalanced dataset+
     learner = DecisionTreeClassifier(criterion='entropy',)
     if model == 'MLP':
-        learner = MLPClassifier(hidden_layer_sizes=(200, 100))
+        learner = MLPClassifier(hidden_layer_sizes=mlp_layers, activation=mlp_activation)
 
     splitter = StratifiedKFold(n_splits=5)
 
@@ -48,7 +53,8 @@ def main(cnf, solver='unigen', output='out.csv', model='MLP', save_dataset=True)
         # gathers accuracy and precision by running the model and writes it to output
         acc, prec = run_model(learner, data_x, data_y, splitter)
         finish = datetime.datetime.now()
-        outstream.write(f'{os.path.basename(cnf)},{solver},{type(learner)},{acc},{prec},{start},{finish}\n')
+        model_str = model if model != 'MLP' else f'{model}_{mlp_activation}_{mlp_layers}'
+        outstream.write(f'{os.path.basename(cnf)},{solver},{model_str},{acc},{prec},{start},{finish}\n')
 
 
 def write_header(output):
