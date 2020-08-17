@@ -39,7 +39,8 @@ wait
 # salloc -p tupi -J mlbf -t 1-00:00:00 --exclusive
 # ssh tupi
 # cd mlbf
-# conda activate mlbf
+# conda activate mlsat
 # srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python run_instances.py $1 --output $2
 
 # tacas15: for i in instances/tacas15/*.cnf; do srun --resv-ports  --nodes 1 --ntasks=1 -c 48 python mlbf/main.py $i --output tacas15.csv; done
+# #neurons: for i in *.cnf; do srun --resv-ports  --nodes 1 --ntasks=1 -c 48 python mlbf/mlpsize.py $i --output num_neurons_satlib-uf.csv --mlp_activation=logistic --max_neurons=512; done
