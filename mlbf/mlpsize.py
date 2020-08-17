@@ -51,7 +51,7 @@ def mlpsize(*cnf, solver='unigen', output='out.csv', cvfolds=5,
                 score, std = np.mean(scores['test_score']), np.std(scores['test_score'])
                 finish = datetime.datetime.now()
                 outstream.write(f'{os.path.basename(formula)},{solver},{mlp_activation},{num_neurons},{cvfolds},{metric},{score},{std},{start},{finish}\n')
-                if std == 0:
+                if metric == 1 and std == 0:
                     print(f'Perfect {metric} for {formula} with {num_neurons} neurons in 1 hidden layer')
                     break
 
