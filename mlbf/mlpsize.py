@@ -11,14 +11,14 @@ import dataset
 import numpy as np
 
 
-def mlpsize(*cnf, solver='unigen', output='out.csv', cvfolds=5,
+def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
             max_neurons=512, mlp_activation='relu', metric='accuracy', save_dataset=True):
     """
     Tests various hidden-layer sizes until it goes perfect on a given formula, or formulas.
     (much code's been shamelessly copied from main.py
     TODO: modularize the code)
 
-    :param cnf: path to the boolean formula in CNF (Dimacs) format (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
+    :param inputs: path to (multiple) dataset (.pkl.gz) or CNF (Dimacs) files (see https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
     :param solver: name of the SAT solver to sample satisfying samples
     :param output: path to output file
     :param cvfolds: number of folds for cross-validation
@@ -28,13 +28,13 @@ def mlpsize(*cnf, solver='unigen', output='out.csv', cvfolds=5,
     :param metric: score metric
     :return:
     """
-    for formula in cnf:
+    for formula in inputs:
         start = datetime.datetime.now()
 
         data_x, data_y = dataset.get_dataset(formula, solver)
 
         if len(data_x) < 100:
-            print(f'{cnf} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
+            print(f'{inputs} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
             return
 
         write_header(output)
@@ -43,7 +43,7 @@ def mlpsize(*cnf, solver='unigen', output='out.csv', cvfolds=5,
         for i in range(int(math.log2(max_neurons)) + 1):
             num_neurons = 2 ** i  # the next power of 2
             learner = MLPClassifier(hidden_layer_sizes=(num_neurons,), activation=mlp_activation)
-            scores = cross_validate(learner, data_x, data_y, cv=5, scoring=metric)
+            scores = cross_validate(learner, data_x, data_y, cv=cvfolds, scoring=metric)
 
             with open(output, 'a') as outstream:
                 # gathers accuracy and precision by running the model and writes it to output

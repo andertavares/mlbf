@@ -48,7 +48,7 @@ def main(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
     write_header(output)
 
     scoring = ['accuracy', 'f1_macro']
-    scores = cross_validate(learner, data_x, data_y, cv=5, scoring=scoring)
+    scores = cross_validate(learner, data_x, data_y, cv=cvfolds, scoring=scoring)
 
     with open(output, 'a') as outstream:
         # gathers accuracy and precision by running the model and writes it to output

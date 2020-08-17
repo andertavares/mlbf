@@ -60,29 +60,34 @@ def dataset_exists(cnf):
     return len(glob.glob(f'{cnf}_*.pkl.gz')) > 0
 
 
-def get_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
+def get_dataset(path, solver='unigen', num_positives=500, num_negatives=500, save_dataset=True, overwrite=False):
     """
     Returns an existing dataset for the given formula if one exists.
     Otherwise, generates a new dataset with the solver and specified parameters
     """
-    if dataset_exists(cnf):
-        return read_dataset(cnf)
+    if dataset_exists(path) or path.endswith('.pkl.gz'):
+        return read_dataset(path)
     else:
-        return generate_dataset(cnf, solver, num_positives, num_negatives, save_dataset, overwrite)
+        return generate_dataset(path, solver, num_positives, num_negatives, save_dataset, overwrite)
 
 
-def read_dataset(cnf):
+def read_dataset(path):
     """
-    Attempts to retrieve a dataset of a given CNF file.
+    Attempts to retrieve a dataset from a given file.
+    The file can be either a .pkl.gz or .cnf.
+    In case of a .cnf, it tries to find the corresponding .pkl.gz
     If more than one dataset exists (i.e. multiple files
     match the pattern {cnf}_*.pkl.gz), one is returned at random.
-    :param cnf:
+    :param path:
     :return:tuple of 2 pandas dataframes
     """
-    if not dataset_exists(cnf):
-        raise ValueError(f"There is no dataset for {cnf}")
+    if path.endswith('.pkl.gz'):
+        return get_xy_data(pd.read_pickle(path, compression='gzip'))
 
-    dataset_files = glob.glob(f'{cnf}_*.pkl.gz')
+    if not dataset_exists(path):
+        raise ValueError(f"There is no dataset for {path}")
+
+    dataset_files = glob.glob(f'{path}_*.pkl.gz')
     df = pd.read_pickle(random.choice(dataset_files), compression='gzip')
 
     # breaks into input features & label
