@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import fire
@@ -58,7 +59,7 @@ def generate_instances(dest_dir, n, m, k=3, num_instances=100, tmpfile='/tmp/can
     """
     num_sat, num_unsat = 0, 0
     for i in range(num_instances):
-        print('calling cnfgen')
+        print(f'calling cnfgen with n={n}, m={m}, k={k}')
         kcnfgen(tmpfile, n, m, k)
 
         # TODO collect statistics
@@ -68,17 +69,26 @@ def generate_instances(dest_dir, n, m, k=3, num_instances=100, tmpfile='/tmp/can
             subprocess.check_call(['minisat', tmpfile], stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as ex:
             if ex.returncode == 10:  # satisfiable
-                os.rename(tmpfile, f'{dest_dir}/sat_{num_sat:05}_{k}_{n}_{m}.cnf')
+                shutil.move(tmpfile, f'{dest_dir}/sat_{num_sat:05}_k{k}_v{n}_c{m}.cnf')
                 num_sat += 1
             else:  # unsatisfiable
-                os.rename(tmpfile, f'{dest_dir}/sat_{num_unsat:05}_{k}_{n}_{m}.cnf')
+                shutil.move(tmpfile, f'{dest_dir}/sat_{num_unsat:05}_k{k}_v{n}_c{m}.cnf')
                 num_unsat += 1
 
 
-def phase_transition_instances(where, n, num_instances, step=0.1, num_steps=10, k=3):
+def phase_transition_neighborhood(where, n, num_instances, step=0.1, num_steps=10, k=3):
+    """
+    Generates kCNF instances in the neighborhood of the phase transition region.
+    :param where: directory where the instances will be saved
+    :param n: number of variables
+    :param num_instances: number of instances
+    :param step: increments on the phase transition ratio
+    :param num_steps: how many values to test around the phase transition point (half to each direction)
+    :param k: number of variables per clause
+    """
     os.makedirs(where, exist_ok=True)
 
-    dest_format = '{}_v' + str(n) + '_c{}_r{:.3f}'  # onphase?, vars=n, clauses, ratio
+    dest_format = where + '/{}_v' + str(n) + '_c{}_r{:.3f}'  # onphase?, vars=n, clauses, ratio
 
     # on phase transition
     clauses_at_phase = phase_transition_clauses(n)
@@ -86,7 +96,7 @@ def phase_transition_instances(where, n, num_instances, step=0.1, num_steps=10, 
 
     dest = dest_format.format('onphase', clauses_at_phase, ratio_at_phase)
     os.makedirs(dest, exist_ok=True)
-    generate_instances(dest, clauses_at_phase, num_instances)
+    generate_instances(dest, n, clauses_at_phase, k, num_instances)
 
     for i in range(1, 1 + num_steps // 2):
         # overconstrained
@@ -94,7 +104,7 @@ def phase_transition_instances(where, n, num_instances, step=0.1, num_steps=10, 
         clauses_over = round(n * ratio_over)
         dest = dest_format.format('over', clauses_over, ratio_over)
         os.makedirs(dest, exist_ok=True)
-        generate_instances(dest, n, clauses_over, num_instances)
+        generate_instances(dest, n, clauses_over, k, num_instances)
 
         # underconstrained -- TODO avoid duplicated code from above
         ratio_under = ratio_at_phase - i * step
@@ -102,6 +112,15 @@ def phase_transition_instances(where, n, num_instances, step=0.1, num_steps=10, 
         dest = dest_format.format('under', clauses_under, ratio_under)
         os.makedirs(dest, exist_ok=True)
         generate_instances(dest, n, clauses_under, num_instances)
+
+
+def paper_instances():
+    """
+    Generates the instances as used in the paper.
+    """
+    for v in range(10, 101, 10):    # 101 because i want 10, 20, ..., 100
+        print(f"Generating instances with {v} variables...")
+        phase_transition_neighborhood(f'instances/phase/v{v}', v, 1000)
 
 
 if __name__ == '__main__':
