@@ -7,6 +7,11 @@ from pysat.formula import CNF
 from mlbf import kcnfgen
 
 class TestDataset(unittest.TestCase):
+
+    def test_create_instance(self):
+        # TODO: run under- and overconstrained generations and see if the files are correct
+        pass
+
     def test_phase_transition(self):
         self.assertEqual(91, kcnfgen.phase_transition_clauses(20))  # hardcoded
         self.assertEqual(218, kcnfgen.phase_transition_clauses(50))  # hardcoded
