@@ -69,11 +69,15 @@ def generate_instances(dest_dir, n, m, k=3, num_instances=100, tmpfile='/tmp/can
             subprocess.check_call(['minisat', tmpfile], stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as ex:
             if ex.returncode == 10:  # satisfiable
-                shutil.move(tmpfile, f'{dest_dir}/sat_{num_sat:05}_k{k}_v{n}_c{m}.cnf')
                 num_sat += 1
-            else:  # unsatisfiable
-                shutil.move(tmpfile, f'{dest_dir}/sat_{num_unsat:05}_k{k}_v{n}_c{m}.cnf')
+                shutil.move(tmpfile, f'{dest_dir}/sat_{num_sat:05}_k{k}_v{n}_c{m}.cnf')
+
+            elif ex.returncode == 20:  # unsatisfiable
                 num_unsat += 1
+                shutil.move(tmpfile, f'{dest_dir}/unsat_{num_unsat:05}_k{k}_v{n}_c{m}.cnf')
+
+            else:
+                raise RuntimeError(f"Unexpected minisat return code '{ex.returncode}' on {tmpfile}")
 
 
 def phase_transition_neighborhood(where, n, num_instances, step=0.1, num_steps=10, k=3):
