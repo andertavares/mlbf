@@ -4,6 +4,22 @@ import subprocess
 import fire
 
 
+def phase_transition(num_vars):
+    phases = {  # vars->clauses -- hard-coded values based on previous research
+        20: 91,
+        50: 218,
+        100: 431,
+        150: 645,
+        200: 854
+    }
+
+    if num_vars in phases:
+        return phases[num_vars]
+
+    # Crawford 1996's equation
+    return int(4.258*num_vars + 58.26 * num_vars**(-2/3))
+
+
 def kcnfgen(output, n, m, k=3):
     """
     Generates a random k-CNF with the specified parameters.
