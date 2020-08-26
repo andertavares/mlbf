@@ -67,5 +67,29 @@ def write_header(output):
             out.write('formula,sampler,activation,#neurons,cvfolds,metric,mean,std,start,finish\n')
 
 
+def vsphase(basedir, simultaneous):
+    from multiprocessing import Pool
+    import pathlib
+    import glob
+
+    activations = ['relu', 'sigmoid']
+    var_sizes = range(10, 101, 10)  # [10,20,...,100]
+    directories, outfiles = [], []
+    for v in var_sizes:
+        dirs_on_v = list(glob.glob(f'{basedir}/v{v}/*/'))
+        directories += [os.path.normpath(d) for d in dirs_on_v]
+        outfiles += [f'{basedir}/neurons_v{v}_{pathlib.PurePath(d).name}.csv' for d in dirs_on_v]
+
+    #print(outfiles, len(outfiles))
+
+    param_list = []
+    for a in activations:
+        param_list += [(*glob.glob(f'{d}/*.cnf'), 'unigen', o, 5, 512, a, 'accuracy', True) for d, o in zip(directories, outfiles)]
+
+    print(param_list, len(param_list))
+    with Pool(int(simultaneous)) as p:
+        p.starmap(mlpsize, param_list)
+
+
 if __name__ == '__main__':
-    fire.Fire(mlpsize)
+    fire.Fire()
