@@ -115,7 +115,7 @@ def phase_transition_neighborhood(where, n, num_instances, step=0.1, num_steps=1
         clauses_under = round(n * ratio_under)
         dest = dest_format.format('under', clauses_under, ratio_under)
         os.makedirs(dest, exist_ok=True)
-        generate_instances(dest, n, clauses_under, num_instances)
+        generate_instances(dest, n, clauses_under, k, num_instances)
 
 
 def paper_instances():
