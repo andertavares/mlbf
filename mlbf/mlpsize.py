@@ -35,7 +35,7 @@ def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
 
         if len(data_x) < 100:
             print(f'{inputs} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
-            return
+            continue  # goes to the next input
 
         write_header(output)
 
@@ -56,6 +56,21 @@ def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
                     break
 
 
+def mlpsize_list(inputs, solver, output, cvfolds,
+            max_neurons, mlp_activation, metric, save_dataset):
+    """
+    Just a Pool.starmap-friendly proxy for mlpsize which receives inputs as a list
+    and 'explodes' it
+    """
+    if len(inputs) == 0:
+        print(f'No inputs! Skipping {output}...')
+        return
+
+    return mlpsize(*inputs, solver=solver, output=output, cvfolds=cvfolds,
+            max_neurons=max_neurons, mlp_activation=mlp_activation, metric=metric,
+            save_dataset=save_dataset)
+
+
 def write_header(output):
     """
     Creates the header in the output file if it does not exist
@@ -67,29 +82,34 @@ def write_header(output):
             out.write('formula,sampler,activation,#neurons,cvfolds,metric,mean,std,start,finish\n')
 
 
-def vsphase(basedir, simultaneous):
+def vsphase(basedir, simultaneous, activation):
     from multiprocessing import Pool
     import pathlib
     import glob
 
-    activations = ['relu', 'sigmoid']
+    #activations = ['relu', 'sigmoid']
     var_sizes = range(10, 101, 10)  # [10,20,...,100]
     directories, outfiles = [], []
+
+    basedir = basedir.rstrip('/')  # removes trailing '/' if there is one
     for v in var_sizes:
         dirs_on_v = list(glob.glob(f'{basedir}/v{v}/*/'))
         directories += [os.path.normpath(d) for d in dirs_on_v]
-        outfiles += [f'{basedir}/neurons_v{v}_{pathlib.PurePath(d).name}.csv' for d in dirs_on_v]
+        outfiles += [f'{basedir}/neurons_{activation}_v{v}_{pathlib.PurePath(d).name}.csv' for d in dirs_on_v]
 
     #print(outfiles, len(outfiles))
 
-    param_list = []
-    for a in activations:
-        param_list += [(*glob.glob(f'{d}/*.cnf'), 'unigen', o, 5, 512, a, 'accuracy', True) for d, o in zip(directories, outfiles)]
+    #param_list = []
+    #for a in activations:
+    param_list = [(list(glob.glob(f'{d}/*.pkl.gz')), 'unigen', o, 5, 512, activation, 'accuracy', True) for d, o in zip(directories, outfiles)]
 
-    print(param_list, len(param_list))
+    #print(param_list, len(param_list))
     with Pool(int(simultaneous)) as p:
-        p.starmap(mlpsize, param_list)
+        p.starmap(mlpsize_list, param_list)
 
 
 if __name__ == '__main__':
     fire.Fire()
+
+
+#  for d in instances/phase/v*/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python mlbf/dataset.py $d/*.cnf; done
