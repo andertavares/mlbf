@@ -82,7 +82,11 @@ def write_header(output):
             out.write('formula,sampler,activation,#neurons,cvfolds,metric,mean,std,start,finish\n')
 
 
-def vsphase(basedir, simultaneous, activation):
+def vsphase_parallel(basedir, simultaneous, activation):
+    """
+    Attempts to run multiple mlpsize experiments (on the phase transition instances).
+    Some weird error arised on reading a dataset
+    """
     from multiprocessing import Pool
     import pathlib
     import glob
@@ -106,6 +110,19 @@ def vsphase(basedir, simultaneous, activation):
     #print(param_list, len(param_list))
     with Pool(int(simultaneous)) as p:
         p.starmap(mlpsize_list, param_list)
+
+
+def vsphase(basedir, activation):
+    import pathlib
+    import glob
+
+    basedir = basedir.rstrip('/')  # removes trailing '/' if there is one
+    for v in range(10, 101, 10):  # [10,20,...,100]
+
+        for instance_dir in glob.glob(f'{basedir}/v{v}/*/'):
+            instance_dir = os.path.normpath(instance_dir)  # normalizes the path, e.g. removing redundant /
+            outfile = f'{basedir}/neurons_{activation}_v{v}_{pathlib.PurePath(instance_dir).name}.csv'
+            mlpsize_list(glob.glob(f'{instance_dir}/*.pkl.gz'), 'unigen', outfile, 5, 512, activation, 'accuracy', True)
 
 
 if __name__ == '__main__':
