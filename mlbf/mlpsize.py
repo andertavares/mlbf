@@ -111,5 +111,5 @@ def vsphase(basedir, simultaneous, activation):
 if __name__ == '__main__':
     fire.Fire()
 
-
+#  srun --resv-ports --nodes 1 --ntasks=1 -c 64 python mlbf/mlpsize.py vsphase instances/phase 4
 #  for d in instances/phase/v*/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python mlbf/dataset.py $d/*.cnf; done
