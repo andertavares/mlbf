@@ -9,6 +9,7 @@ from sklearn.model_selection import StratifiedKFold, cross_validate
 
 import dataset
 import numpy as np
+import pandas as pd
 
 
 def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
@@ -82,17 +83,21 @@ def write_header(output):
             out.write('formula,sampler,activation,#neurons,cvfolds,metric,mean,std,start,finish\n')
 
 
-def vsphase_parallel(basedir, simultaneous, activation):
+def vsphase_parallel(basedir, simultaneous, activation, var_sizes=range(10,101,10)):
     """
     Attempts to run multiple mlpsize experiments (on the phase transition instances).
     Some weird error arised on reading a dataset
+    :param basedir: where the phase instances are located
+    :param simultaneous: how many tasks to run in parallel
+    :param activation: activation function to test (relu, tanh or logistic)
+    :param var_sizes: which variable sizes to test
     """
     from multiprocessing import Pool
     import pathlib
     import glob
 
     #activations = ['relu', 'sigmoid']
-    var_sizes = range(10, 101, 10)  # [10,20,...,100]
+    #var_sizes = range(10, 101, 10)  # [10,20,...,100]
     directories, outfiles = [], []
 
     basedir = basedir.rstrip('/')  # removes trailing '/' if there is one
@@ -112,12 +117,18 @@ def vsphase_parallel(basedir, simultaneous, activation):
         p.starmap(mlpsize_list, param_list)
 
 
-def vsphase(basedir, activation):
+def vsphase(basedir, activation, var_sizes=range(10,101,10)):
+    """
+   Runs mlpsize experiments on the phase transition instances.
+   :param basedir: where the phase instances are located
+   :param activation: activation function to test (relu, tanh or logistic)
+   :param var_sizes: which variable sizes to test
+   """
     import pathlib
     import glob
 
     basedir = basedir.rstrip('/')  # removes trailing '/' if there is one
-    for v in range(10, 101, 10):  # [10,20,...,100]
+    for v in var_sizes:
 
         for instance_dir in glob.glob(f'{basedir}/v{v}/*/'):
             instance_dir = os.path.normpath(instance_dir)  # normalizes the path, e.g. removing redundant /
