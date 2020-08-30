@@ -29,7 +29,19 @@ def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
     :param metric: score metric
     :return:
     """
+
+    write_header(output)
+
+    # useful if output already exists for avoiding repeating the same formula
+    df = pd.read_csv(output)
+
     for formula in inputs:
+        print(f'Running for {formula}')
+        # checks whether this formula has already been tested
+        if df['formula'].str.contains(os.path.basename(formula)).any():
+            print(f'Formula {formula} already executed, skipping...')
+            continue
+
         start = datetime.datetime.now()
 
         data_x, data_y = dataset.get_dataset(formula, solver)
@@ -37,8 +49,6 @@ def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
         if len(data_x) < 100:
             print(f'{inputs} has {len(data_x)} instances, which is less than 100 (too few to learn). Aborting.')
             continue  # goes to the next input
-
-        write_header(output)
 
         # goes from 1, 2, 4, ..., max_neurons until it finds the optimal accuracy
         for i in range(int(math.log2(max_neurons)) + 1):
@@ -83,7 +93,7 @@ def write_header(output):
             out.write('formula,sampler,activation,#neurons,cvfolds,metric,mean,std,start,finish\n')
 
 
-def vsphase_parallel(basedir, simultaneous, activation, var_sizes=range(10,101,10)):
+def vsphase_parallel(basedir, simultaneous, activation, var_sizes=range(10, 101, 10)):
     """
     Attempts to run multiple mlpsize experiments (on the phase transition instances).
     Some weird error arised on reading a dataset
@@ -117,7 +127,7 @@ def vsphase_parallel(basedir, simultaneous, activation, var_sizes=range(10,101,1
         p.starmap(mlpsize_list, param_list)
 
 
-def vsphase(basedir, activation, var_sizes=range(10,101,10)):
+def vsphase(basedir, activation, var_sizes=range(10, 101, 10)):
     """
    Runs mlpsize experiments on the phase transition instances.
    :param basedir: where the phase instances are located
@@ -139,5 +149,5 @@ def vsphase(basedir, activation, var_sizes=range(10,101,10)):
 if __name__ == '__main__':
     fire.Fire()
 
-#  srun --resv-ports --nodes 1 --ntasks=1 -c 64 python mlbf/mlpsize.py vsphase instances/phase 4
-#  for d in instances/phase/v*/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python mlbf/dataset.py $d/*.cnf; done
+#  srun --resv-ports --nodes 1 --ntasks=1 -c 16 python mlbf/mlpsize.py vsphase $SCRATCH/mlbf/instances/phase relu [x]
+#  for d in instances/phase/v*/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python mlbf/mlpsize.py vsphase instances/phase relu [x]
