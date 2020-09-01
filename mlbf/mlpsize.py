@@ -54,7 +54,7 @@ def mlpsize(*inputs, solver='unigen', output='out.csv', cvfolds=5,
         for i in range(int(math.log2(max_neurons)) + 1):
             num_neurons = 2 ** i  # the next power of 2
             learner = MLPClassifier(hidden_layer_sizes=(num_neurons,), activation=mlp_activation)
-            scores = cross_validate(learner, data_x, data_y, cv=cvfolds, scoring=metric)
+            scores = cross_validate(learner, data_x, data_y, cv=cvfolds, scoring=metric, n_jobs=1)
 
             with open(output, 'a') as outstream:
                 # gathers accuracy and precision by running the model and writes it to output
