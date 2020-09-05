@@ -56,7 +56,7 @@ def main(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
         acc, f1 = np.mean(scores['test_accuracy']), np.mean(scores['test_f1_macro']) #run_model(learner, data_x, data_y, splitter)
         std_acc, std_f1 = np.std(scores['test_accuracy']), np.std(scores['test_f1_macro'])
         finish = datetime.datetime.now()
-        model_str = model if model != 'MLP' else f'{model}_{mlp_activation}_{mlp_layers}'
+        model_str = model if model != 'MLP' else f'{model}_{mlp_activation}_{"-".join([str(x) for x in mlp_layers])}'
         outstream.write(f'{os.path.basename(cnf)},{solver},{model_str},{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish}\n')
 
 
