@@ -3,6 +3,7 @@ import os
 import fire
 
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import StratifiedKFold, cross_validate
@@ -44,6 +45,8 @@ def main(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
     learner = DecisionTreeClassifier(criterion='entropy',)
     if model == 'MLP':
         learner = MLPClassifier(hidden_layer_sizes=mlp_layers, activation=mlp_activation)
+    if model == 'RF':
+        learner = RandomForestClassifier()
 
     write_header(output)
 
