@@ -1,17 +1,13 @@
 # MLBF
 Machine Learning on Boolean Formulas
 
-Currently a working prototype that implements part of Moshe Vardi's idea (e.g. it does a different approach on 2):
+Companion code of the paper "Understanding Boolean Function Learnability on Deep Neural Networks".
 
-1. Start with a large Boolean formula f (say, industrial SAT benchmark).
-2. Generate many samples satisfying f or \neg f.
-(Using, for example, Unigen)
-3. Train a DNN on this labeled sample.
-4. Check whether it is a good apprcximation of f.
+Tested on Ubuntu Linux 18.04.
 
 ## Installation
 
-You need the following libraries (commands to install assume a conda environment):
+You need python 3.8 and the following libraries (commands to install assume a conda environment):
 
 * scikit-learn & pandas (`conda install -c anaconda scikit-learn pandas`)
 * fire (`conda install -c conda-forge fire`)
@@ -22,16 +18,18 @@ Then you just need to clone this repository:
 `git clone https://github.com/andertavares/mlbf.git` and enter the new directory `mlsat` to be able to execute.
 
 ## Execution
-__[outdated i.e. not valid for the current version!]__
 
-* Single instance: 
-`python main.py cnf=path_to_cnf_file --solver=SolverName --output=output_file`
+- Replicating Section 4 experiments:
+ `python mlbf/main.py *.cnf --output=out.csv`
 
-Defaults are: `cnf=instances/bw_large.d.cnf`, `solver=Glucose3`, `output=out.csv`. The instance is one from blocks world from satlib (https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/PLANNING/BlocksWorld/descr.html). The solver must be one of: https://pysathq.github.io/docs/html/api/solvers.html.
+This will generate a dataset, run 5-fold cross validation of a 2-hidden layer MLP (200 and 100 neurons, respectively) for each `.cnf` file, writing the statistics on `out.csv`. If the dataset was already generated, it will be used. Run `python mlbf/main.py -- --help` for additional options. 
 
-* Many instances in a .tar.gz file:
-This is particularly useful to evaluate in SATlib instances, which have many related intances packed in a .tar.gz file. The command is (values assigned to [optional] parameters are the default ones, which can be replaced as you wish):
+SATLIB formulas are on `instances/satlib_mis.tar.gz` and large formulas from the model sampling benchmark are on `instances/tacas15.tar.gz`. Our kclique instances are at https://drive.google.com/file/d/1R4PhugDBrIuznHlTGsjopT2sar-b1Q-r/view?usp=sharing. 
 
-`python run_instances.py instances_file [--output_file=out.csv extraction_point=/tmp/satinstances solver='Glucose3']`
+- Replicating Section 5 experiments:
+`python mlbf/mlpsize.py mlpsize *.cnf --output=out.csv`
+
+This will generate a dataset and test how many neurons in a single-hidden-layer MLP are required for perfect accuracy on 5-fold CV  for each `.cnf` file, writing the statistics on `out.csv`. If the dataset was already generated, it will be used. Run `python mlbf/mlpsize.py -- --help` for additional options. The random 3-CNF instances, together with the respective datasets are at https://drive.google.com/file/d/18ubvvZTGsmS6_2tiqbG07LJWyjaxvuWk/view?usp=sharing.
+
 
 
