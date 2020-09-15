@@ -1,7 +1,7 @@
 # MLBF
 Machine Learning on Boolean Formulas
 
-Companion code of the paper "Understanding Boolean Function Learnability on Deep Neural Networks".
+Companion code of the paper "Understanding Boolean Function Learnability on Deep Neural Networks" (https://arxiv.org/abs/2009.05908)
 
 Tested on Ubuntu Linux 18.04.
 
