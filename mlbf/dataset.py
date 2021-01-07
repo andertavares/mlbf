@@ -169,10 +169,10 @@ def cli_generate_dataset(*cnf, solver='unigen', num_positives=0, num_negatives=0
     """
     for formula in cnf:
         if proportion == 'quadratic':  # dataset size will be vars^2
-            f = CNF(cnf)
+            f = CNF(formula)
             num_positives = num_negatives = int((f.nv**2) / 2)
         elif proportion == 'loglike':   # dataset size grows log-scale with the number of possible assignments
-            f = CNF(cnf)
+            f = CNF(formula)
             num_positives = num_negatives = int(min(2**f.nv,  5000*2**(log10(f.nv)-1)))
         generate_dataset(formula, solver, num_positives, num_negatives, save_dataset, overwrite)
 
