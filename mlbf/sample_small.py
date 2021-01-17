@@ -13,7 +13,7 @@ def sample_small(basedir, positives, negatives, solver='Glucose3', *var_sizes):
     :param positives: number of positive samples to generate
     :param negatives: number of negative samples to generate
     :param solver: sat solver used to enumerate instances
-    :param var_sizes: will look for formuals with the number of variables in this list
+    :param var_sizes: will look for formulas with the number of variables in this list
     :return:
     """
     if len(var_sizes) == 0:
