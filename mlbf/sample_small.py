@@ -31,3 +31,6 @@ if __name__ == '__main__':
 
 # usage example:
 # python mlbf/sample_small.py instances/phase --positives 5000 --negatives 5000 --solver Glucose3 10 20 30
+
+# 20k fix:
+# python mlbf/sample_small.py instances/phase_20k-loglike/ --positives 10000 --negatives 10000 --solver Glucose3 NUMBER
