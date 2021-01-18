@@ -153,12 +153,13 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     return data_x, data_y
 
 
-def cli_generate_dataset(*cnf, solver='unigen', num_positives=0, num_negatives=0,
+def cli_generate_dataset(*cnf, solver='unigen', failsafe_solver='Glucose3', num_positives=0, num_negatives=0,
                          save_dataset=True, overwrite=False, proportion=None):
     """
     This function just calls 'generate_dataset' but does not return data for cleaner use with fire.Fire
     :param cnf: path to the boolean formula in DIMACS CNF format
     :param solver: unigen or the name of a PySAT solver
+    :param failsafe_solver: if the main solver fails, use this to generate samples
     :param num_positives: number of positive samples
     :param num_negatives: number of negative samples
     :param save_dataset: if True, saves the dataset as cnf_solver_pos_neg.pkl.gz, where pos & neg are the actual number of samples
@@ -173,8 +174,13 @@ def cli_generate_dataset(*cnf, solver='unigen', num_positives=0, num_negatives=0
             num_positives = num_negatives = int((f.nv**2) / 2)
         elif proportion == 'loglike':   # dataset size grows log-scale with the number of possible assignments
             f = CNF(formula)
-            num_positives = num_negatives = int(min(2**f.nv,  5000*2**(log10(f.nv)-1)))
+            num_positives = num_negatives = int(min(2**f.nv,  5000*2**(log10(f.nv)-1))) // 2
         generate_dataset(formula, solver, num_positives, num_negatives, save_dataset, overwrite)
+
+        # checks if the main solver has failed, if so, use the failsafe solver
+        if len(glob.glob(f'{formula}*.pkl.gz')) == 0:
+            print(f'WARNING: {solver} did not sample for {formula}. Using {failsafe_solver}.')
+            generate_dataset(formula, failsafe_solver, num_positives, num_negatives, save_dataset, overwrite)
 
 
 if __name__ == '__main__':
@@ -183,3 +189,6 @@ if __name__ == '__main__':
 
 #  generate dataset for phase transition:
 #  for d in instances/phase/v*/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 16 python mlbf/dataset.py $d/*.cnf; done
+# loglike in shared:
+# for d in instances/phase/vZZ/*/; do echo $d; srun --resv-ports  --nodes 1 --ntasks=1 -c 32 python mlbf/dataset.py $d/*.cnf --proportion loglike; done
+
