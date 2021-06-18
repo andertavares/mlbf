@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from pysat.formula import CNF
 
-from positives import PySATSampler, UnigenSampler
+from positives import PySATSampler, UnigenSampler, Unigen3Sampler
 import negatives as negative_sampler
 
 
@@ -123,7 +123,12 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
     :return: two dataframes with the input data & labels (X and y in ML library parlance)
     """
 
-    positive_sampler = UnigenSampler() if solver == 'unigen' else PySATSampler(solver_name=solver)
+    sampler = {
+        'unigen': UnigenSampler(),
+        'unigen3': Unigen3Sampler()
+    }
+
+    positive_sampler = sampler.get(solver, PySATSampler(solver_name=solver))
     positives = positive_sampler.sample(cnf, num_positives)
 
     # checks the validity of the samples
