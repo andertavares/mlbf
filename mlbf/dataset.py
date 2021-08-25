@@ -1,5 +1,5 @@
 import os
-import random
+import re
 
 import glob
 from math import log, log10
@@ -188,8 +188,33 @@ def cli_generate_dataset(*cnf, solver='unigen', failsafe_solver='Glucose3', num_
             generate_dataset(formula, failsafe_solver, num_positives, num_negatives, save_dataset, overwrite)
 
 
+def recursive(basedir, solver='unigen', failsafe_solver='Glucose3', num_positives=5000,
+                                     num_negatives=5000,
+                                     save_dataset=True, overwrite=False, proportion=None):
+    """
+    Traverses the specified basedir recursively, generating a dataset for each formula
+    in the subdirectories (TODO check if basedir is included)
+    :return:
+    """
+
+    # traverse root directory, and list directories as dirs and files as files
+    for root, dirs, files in os.walk(basedir):
+        print(f'{root}')
+        if any([re.search('\.cnf', f) is not None for f in files]):  # checks whether there are cnf files in the current dir
+            print(f'.cnf files found on {root}. Generating datasets...')
+
+            # prepends current dir to each file (which are only the file names)
+            file_list = [os.path.join(root, f) for f in files]
+
+            cli_generate_dataset(
+                *file_list, solver=solver, failsafe_solver=failsafe_solver,
+                num_positives=num_positives, num_negatives=num_negatives,
+                save_dataset=save_dataset, overwrite=overwrite, proportion=proportion
+            )
+
+
 if __name__ == '__main__':
-    fire.Fire(cli_generate_dataset)
+    fire.Fire()
 
 
 #  generate dataset for phase transition:
