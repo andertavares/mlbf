@@ -51,8 +51,8 @@ class PySATSampler(PositiveSampler):
                 sat_list = []
                 for i, solution in enumerate(solver.enum_models()):
                     sat_list.append(solution)
-                    if i + 1 >= max_samples / 2:  # adds 1 to index as it starts at zero
-                        print(f"Limit number of {max_samples / 2} positive samples reached.")
+                    if i + 1 >= max_samples:  # adds 1 to index as it starts at zero
+                        print(f"Limit number of {max_samples} positive samples reached.")
                         break
 
                 print(f'Found {len(sat_list)} sat instances.')
