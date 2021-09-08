@@ -5,7 +5,7 @@ import main
 import tarfile
 
 
-def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solver='Glucose3', save_dataset=False):
+def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solver='unigen', save_dataset=False):
     """
     Extracts all files in a tar.gz file and runs the experiment for each one of them
     :param solver: name of the SAT solver to find the satisfying samples
