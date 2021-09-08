@@ -29,7 +29,9 @@ def run(instances, output='out.csv', extraction_point='/tmp/satinstances', solve
 
         for f in files:
             print(f'Running {f}...')
-            main.main(os.path.join(root, f), output=output, solver=solver, save_dataset=save_dataset)
+            main.evaluate(os.path.join(root, f), output=output,
+                          solver=solver,
+                          save_dataset=save_dataset)
             print()  # just a newline
     print(f"Finished all instances. Extracted instances and datasets are at {extraction_point}.")
     # shutil.rmtree(extraction_point)
