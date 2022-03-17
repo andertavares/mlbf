@@ -1,5 +1,5 @@
 import os
-import random
+import re
 
 import glob
 from math import log, log10
@@ -159,7 +159,7 @@ def generate_dataset(cnf, solver='unigen', num_positives=500, num_negatives=500,
 
 
 def cli_generate_dataset(*cnf, solver='unigen', failsafe_solver='Glucose3', num_positives=0, num_negatives=0,
-                         save_dataset=True, overwrite=False, proportion=None):
+                         save_dataset=True, overwrite=False, proportion=None, check_existing=False):
     """
     This function just calls 'generate_dataset' but does not return data for cleaner use with fire.Fire
     :param cnf: path to the boolean formula in DIMACS CNF format
@@ -173,6 +173,7 @@ def cli_generate_dataset(*cnf, solver='unigen', failsafe_solver='Glucose3', num_
     (can use string 'quadratic' or 'loglike' for vars^2 or min(2^n,5000*2^(log(n/10)-1)), respectively
     :return:
     """
+    dataset_function = get_dataset if check_existing else generate_dataset
     for formula in cnf:
         if proportion == 'quadratic':  # dataset size will be vars^2
             f = CNF(formula)
@@ -180,16 +181,41 @@ def cli_generate_dataset(*cnf, solver='unigen', failsafe_solver='Glucose3', num_
         elif proportion == 'loglike':   # dataset size grows log-scale with the number of possible assignments
             f = CNF(formula)
             num_positives = num_negatives = int(min(2**f.nv,  5000*2**(log10(f.nv)-1))) // 2
-        generate_dataset(formula, solver, num_positives, num_negatives, save_dataset, overwrite)
-
+        dataset_function(formula, solver, num_positives, num_negatives, save_dataset, overwrite)
         # checks if the main solver has failed, if so, use the failsafe solver
         if len(glob.glob(f'{formula}*.pkl.gz')) == 0:
             print(f'WARNING: {solver} did not sample for {formula}. Using {failsafe_solver}.')
-            generate_dataset(formula, failsafe_solver, num_positives, num_negatives, save_dataset, overwrite)
+            dataset_function(formula, failsafe_solver, num_positives, num_negatives, save_dataset, overwrite)
+
+
+def recursive(basedir, solver='unigen', failsafe_solver='Glucose3', num_positives=5000,
+                                     num_negatives=5000,
+                                     save_dataset=True, overwrite=False, proportion=None):
+    """
+    Traverses the specified basedir recursively, generating a dataset for each formula
+    in the subdirectories (TODO check if basedir is included)
+    :return:
+    """
+
+    # traverse root directory, and list directories as dirs and files as files
+    for root, dirs, files in os.walk(basedir):
+        print(f'{root}')
+        if any([re.search('\.cnf', f) is not None for f in files]):  # checks whether there are cnf files in the current dir
+            print(f'.cnf files found on {root}. Generating datasets...')
+
+            # prepends current dir to each file (which are only the file names)
+            file_list = [os.path.join(root, f) for f in files]
+
+            cli_generate_dataset(
+                *file_list, solver=solver, failsafe_solver=failsafe_solver,
+                num_positives=num_positives, num_negatives=num_negatives,
+                save_dataset=save_dataset, overwrite=overwrite, proportion=proportion,
+                check_existing=True
+            )
 
 
 if __name__ == '__main__':
-    fire.Fire(cli_generate_dataset)
+    fire.Fire()
 
 
 #  generate dataset for phase transition:

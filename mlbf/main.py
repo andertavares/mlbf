@@ -13,8 +13,8 @@ import dataset
 import numpy as np
 
 
-def main(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
-         mlp_layers=[200,100], mlp_activation='relu', save_dataset=True):
+def evaluate(cnf, solver='unigen', output='out.csv', cvfolds=5, model='MLP',
+             mlp_layers=[200,100], mlp_activation='relu', save_dataset=True):
     """
     Runs the prototype, executing the following steps:
 
@@ -118,5 +118,5 @@ def run_model(model, data_x, data_y, splitter):
 
 
 if __name__ == '__main__':
-    fire.Fire(main)
+    fire.Fire(evaluate)
     print("Done")

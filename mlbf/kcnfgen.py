@@ -4,6 +4,11 @@ import subprocess
 
 import fire
 
+"""
+This module requires cnfgen and minisat installed and available in your command line path. 
+For CNFgen, see https://massimolauria.net/cnfgen/ for installation instructions.
+For minisat, a install with 'sudo apt-get install minisat' works (please adapt to your distro).
+"""
 
 def phase_transition_clauses(num_vars):
     """
