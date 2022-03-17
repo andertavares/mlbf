@@ -5,6 +5,7 @@ ENV DOCKER_BUILDKIT=1
 RUN apt-get update && \
     apt-get install --no-install-recommends -y software-properties-common \
     libboost-program-options-dev \
+    libm4ri-dev \
     gcc \
     g++ \
     make \
@@ -24,14 +25,6 @@ RUN git clone https://github.com/meelgroup/mis && \
     git submodule update --init && \
     make static && \
     cd ..
-
-#    MARI
-RUN wget https://bitbucket.org/malb/m4ri/downloads/m4ri-20200125.tar.gz && \
-    tar -xvf m4ri-20200125.tar.gz && \
-    cd m4ri-20200125 && \
-    ./configure && \
-    make && make install && \
-    cd ../..
 
 # CMS
 RUN wget https://github.com/msoos/cryptominisat/archive/5.8.0.tar.gz && \
