@@ -160,10 +160,9 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
                     f'{model_str},,Valiant,{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish}\n'
                 )
 
-        out_data.flush()
-        os.fsync(out_data.fileno())
-        print(f'acc = {acc}, f1 = {f1}')
-        # print('acc = ' + repr(acc) + ', f1 = ' + repr(f1))
+            out_data.flush()
+            os.fsync(out_data.fileno())
+            print(f'acc = {acc}, f1 = {f1}')
 
 
 if __name__ == '__main__':

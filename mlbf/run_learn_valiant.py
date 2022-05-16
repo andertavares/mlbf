@@ -49,20 +49,6 @@ def run_learn(instances, output='out.csv', extraction_path='/tmp/learn_instances
     print(f"Finished all {len(data_files)} instances in {(datetime.datetime.now() - start).total_seconds():8.2f}s. ",
           f"Extracted instances and datasets are at {extraction_path}.")
 
-    # for root, dirs, files in os.walk(extraction_path):
-    #     print(f'{len(files)} files are at {root}.')
-    #
-    #     for f in files:
-    #         print(f'Running {f}...')
-    #         # runs the experiment on formula f, all parameters received from cmdline are passed
-    #         learn_valiant.evaluate(os.path.join(root, f),
-    #                                output=output,
-    #                                cvfolds=cvfolds,
-    #                                cnf_arity=arity,
-    #                                debug=debug)
-    #         print()  # just a newline
-    # print(f"Finished all instances. Extracted instances and datasets are at {extraction_path}.")
-
 
 if __name__ == '__main__':
     fire.Fire(run_learn)
