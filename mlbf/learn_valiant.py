@@ -122,9 +122,9 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
 
     learner = LearnByValiant(cnf_arity, debug=debug)
 
-    write_header(output)
+    write_header(output, cvfolds > 1)
 
-    with open(output, 'a') as outstream:
+    with open(output, 'a') as out_data:
         with gzip.open(dataset, 'rb') as f:
             data = pickle.load(f)
             data_x, data_y = data.iloc[:, :-1], data.iloc[:, [-1]]
@@ -141,7 +141,7 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
 
                 model_str = os.path.basename(dataset).split('_unigen')[0]
 
-                outstream.write(
+                out_data.write(
                     f'{model_str},,Valiant,{cvfolds},{acc},{f1},{start},{finish}\n'
                 )
             else:
@@ -156,14 +156,14 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
 
                 model_str = os.path.basename(dataset).split('_unigen')[0]
 
-                avg_time = (finish - start) / cvfolds
-
-                outstream.write(
+                out_data.write(
                     f'{model_str},,Valiant,{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish}\n'
                 )
 
-                print(f'acc = {acc}, f1 = {f1}, avg time = {avg_time}')
-                print('acc = ' + repr(acc) + ', f1 = ' + repr(f1))
+        out_data.flush()
+        os.fsync(out_data.fileno())
+        print(f'acc = {acc}, f1 = {f1}')
+        # print('acc = ' + repr(acc) + ', f1 = ' + repr(f1))
 
 
 if __name__ == '__main__':
