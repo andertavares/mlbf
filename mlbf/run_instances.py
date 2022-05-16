@@ -3,10 +3,13 @@ import os
 import fire
 import main
 import tarfile
+from multiprocessing import Pool, cpu_count
+from functools import partial
+import datetime
 
 
 def run(instances, output='out.csv', extraction_point='/tmp/satinstances',
-        cvfolds=5, model='MLP',
+        cvfolds=5, model='MLP', n_cores=cpu_count(),
         mlp_layers=[200, 100], mlp_activation='relu',
         solver='unigen', save_dataset=False):
     """
@@ -19,9 +22,14 @@ def run(instances, output='out.csv', extraction_point='/tmp/satinstances',
     :param mlp_activation: MLP's activation function
     :param output: path to write results to (csv format)
     :param extraction_point: point to extract the cnf instances
+    :param n_cores: number of cpu cores to use with parallel computation
     :param save_dataset: whether to save the dataset generated from the cnf files
     :return:
     """
+
+    if n_cores > cpu_count():
+        n_cores = cpu_count()
+
     # creates the extraction point if it does not exist
     os.makedirs(extraction_point, exist_ok=True)
 
@@ -31,18 +39,23 @@ def run(instances, output='out.csv', extraction_point='/tmp/satinstances',
         tf.extractall(extraction_point)
 
     # run each instance in the extraction point (finds all files there recursively)
-    for root, dirs, files in os.walk(extraction_point):
-        print(f'{len(files)} files are at {root}.')
+    data_files = [os.path.join(root, file) for root, dirs, files in os.walk(extraction_point) for file in files]
 
-        for f in files:
-            print(f'Running {f}...')
-            # runs the experiment on formula f, all parameters received from cmdline are passed
-            main.evaluate(os.path.join(root, f), output=output,
-                          cvfolds=cvfolds, model=model,
-                          mlp_layers=mlp_layers, mlp_activation=mlp_activation,
-                          solver=solver, save_dataset=save_dataset)
-            print()  # just a newline
-    print(f"Finished all instances. Extracted instances and datasets are at {extraction_point}.")
+    print(f'{len(data_files)} files are at {extraction_point}.')
+
+    start = datetime.datetime.now()
+
+    with Pool(processes=n_cores) as pool:
+        print(f'Running with {n_cores} cpu cores. Parent process id {os.getppid()}.')
+        pool.map(partial(main.evaluate, output=output,
+                         cvfolds=cvfolds, model=model, mlp_layers=mlp_layers,
+                         mlp_activation=mlp_activation, solver=solver,
+                         save_dataset=save_dataset), data_files)
+        pool.close()
+
+        print()  # just a newline
+    print(f"Finished all {len(data_files)} instances in {(datetime.datetime.now() - start).total_seconds():8.2f}s. ",
+          f"Extracted instances and datasets are at {extraction_point}.")
     # shutil.rmtree(extraction_point)
     # print('Done')
 

@@ -7,18 +7,23 @@ import fire
 import datetime
 
 from sklearn import model_selection
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.metrics import accuracy_score, precision_score, f1_score
 
 
-def write_header(output):
+def write_header(output, k_fold=False):
     """
     Creates the header in the output file if it does not exist
+    :param k_fold: header for split data or k-fold cv
     :param output: path to the output file
     :return:
     """
     if output is not None and not os.path.exists(output):
         with open(output, 'w') as out:
-            out.write('dataset,sampler,learner,cvfolds,mean_acc,std_acc,mean_f1_macro,std_f1,start,finish,mean_time\n')
+            if k_fold:
+                out.write('dataset,sampler,learner,cvfolds,mean_acc,std_acc,mean_f1_macro,std_f1,start,finish\n')
+            else:
+                out.write('dataset,sampler,learner,cvfolds,mean_acc,mean_f1_macro,start,finish\n')
 
 
 def evaluate_clause(clause, assignment):  # assignment is a -1/+1 string
@@ -111,8 +116,11 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
     :return:
     """
 
+    print(f'Working on file {os.path.basename(dataset)} with process {os.getpid()}.')
+
     start = datetime.datetime.now()
-    scoring = ['accuracy', 'f1_macro']
+
+    learner = LearnByValiant(cnf_arity, debug=debug)
 
     write_header(output)
 
@@ -120,24 +128,42 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
         with gzip.open(dataset, 'rb') as f:
             data = pickle.load(f)
             data_x, data_y = data.iloc[:, :-1], data.iloc[:, [-1]]
-            kf = model_selection.KFold(n_splits=cvfolds, random_state=None)
-            learner = LearnByValiant(cnf_arity, debug=debug)
-            scores = cross_validate(learner, data_x, data_y, cv=kf, scoring=scoring)
-            acc, f1 = np.mean(scores['test_accuracy']), np.mean(scores['test_f1_macro'])
-            std_acc, std_f1 = np.std(scores['test_accuracy']), np.std(scores['test_f1_macro'])
 
-            finish = datetime.datetime.now()
+            if cvfolds == 1:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    data_x, data_y, test_size=0.25, stratify=data_y, shuffle=True,
+                    random_state=202205)
 
-            model_str = os.path.basename(dataset).split('_unigen')[0]
+                model_fit = learner.fit(X_train, y_train)
+                acc, f1 = accuracy_score(y_test, model_fit.predict(X_test)), f1_score(y_test, model_fit.predict(X_test))
 
-            avg_time = (finish - start) / cvfolds
+                finish = datetime.datetime.now()
 
-            outstream.write(
-                f'{model_str},,Valiant,{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish},{avg_time}\n'
-            )
+                model_str = os.path.basename(dataset).split('_unigen')[0]
 
-            print(f'acc = {acc}, f1 = {f1}, avg time = {avg_time}')
-            print('acc = ' + repr(acc) + ', f1 = ' + repr(f1))
+                outstream.write(
+                    f'{model_str},,Valiant,{cvfolds},{acc},{f1},{start},{finish}\n'
+                )
+            else:
+                scoring = ['accuracy', 'f1_macro']
+                kf = model_selection.KFold(n_splits=cvfolds, random_state=None)
+
+                scores = cross_validate(learner, data_x, data_y, cv=kf, scoring=scoring)
+                acc, f1 = np.mean(scores['test_accuracy']), np.mean(scores['test_f1_macro'])
+                std_acc, std_f1 = np.std(scores['test_accuracy']), np.std(scores['test_f1_macro'])
+
+                finish = datetime.datetime.now()
+
+                model_str = os.path.basename(dataset).split('_unigen')[0]
+
+                avg_time = (finish - start) / cvfolds
+
+                outstream.write(
+                    f'{model_str},,Valiant,{cvfolds},{acc},{std_acc},{f1},{std_f1},{start},{finish}\n'
+                )
+
+                print(f'acc = {acc}, f1 = {f1}, avg time = {avg_time}')
+                print('acc = ' + repr(acc) + ', f1 = ' + repr(f1))
 
 
 if __name__ == '__main__':
