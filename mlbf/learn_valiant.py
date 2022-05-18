@@ -6,6 +6,7 @@ import gzip
 import fire
 import datetime
 
+from tqdm import tqdm
 from sklearn import model_selection
 from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.metrics import accuracy_score, precision_score, f1_score
@@ -26,7 +27,7 @@ def write_header(output, k_fold=False):
                 out.write('dataset,sampler,learner,cvfolds,mean_acc,mean_f1_macro,start,finish\n')
 
 
-def evaluate_clause(clause, assignment):  # assignment is a -1/+1 string
+def evaluate_clause(assignment, clause):  # assignment is a -1/+1 string
     for i in clause:
         if (2 * assignment[abs(i) - 1] - 1) * i > 0:  # the literal is satisfied
             return 1
@@ -37,40 +38,30 @@ def check_clause(clause, x, positive_index):
     for index in positive_index:
         row = x.loc[index]
         # print('encounter a positive assignment at index '+repr(index))
-        if evaluate_clause(clause, row) == 0:
+        if evaluate_clause(row, clause=clause) == 0:
             return False
     return True
 
 
 class LearnByValiant:
-    def __init__(self, k=3, debug=False, clauses=[]):
-        self.model = clauses
+    def __init__(self, k=3):
+        self.model = []
         self.k = k  # k is the arity of the learnt CNF formula
-        self.debug = debug
 
     def fit(self, x, y):
         n = len(x.columns)
-        print(f'n = {n}')
-        positive_index = []
-        for index, row in y.iterrows():
-            if y.loc[index]['f'] == 1:
-                positive_index.append(index)
-        print(f'Ratio of positive assignments: {len(positive_index)} / {len(x)}')
-        clause_count = 0
-        possible_clauses = self.possible_clauses(n)
-        num_possible_clauses = len(possible_clauses)
-        clause_step = int(num_possible_clauses / 10)
-        if self.debug:
-            print(f'Adjusted step size: {clause_step}.')
-        for clause in self.possible_clauses(n):
-            clause_count += 1
-            if check_clause(clause, x, positive_index):
-                self.model.append(clause)
-            if clause_count % clause_step == 0 and self.debug:
-                print(
-                    f'Learning process (# clauses checked): {clause_count} / {num_possible_clauses} ({round(clause_count * 100.0 / num_possible_clauses, 2)} %)')
-        print(f'Learned a {self.k}-CNF formula by Valiants algorithm with {len(self.model)} clauses.')
-        return self.model
+        positive_index = [index for index, _ in y.iterrows() if y.loc[index]['f'] == 1]
+        print(f'Ratio of positive assignments {len(positive_index)} / {len(x)} for formulas with {n} variables.')
+
+        clauses = self.possible_clauses(n)
+        only_positives = x.loc[positive_index].to_numpy()
+
+        self.model = [c for c in tqdm(clauses, desc=' Learning: ', ascii=True)
+                      if not (np.apply_along_axis(evaluate_clause, 1, only_positives, clause=c) == 0).any()]
+
+        print(f'Learned a {self.k}-CNF formula by Valiant\'s algorithm with {len(self.model)} clauses.')
+
+        return self
 
     def get_params(self, deep=False):
         return {'k': self.k, 'clauses': self.model}
@@ -82,16 +73,15 @@ class LearnByValiant:
 
     def predict(self, x):
         predict_ans = []
-        for index, row in x.iterrows():
+        for index, row in tqdm(x.iterrows(), desc=' Predict: ', ascii=True, total=x.shape[0]):
             flag = 1
             for clause in self.model:
-                if evaluate_clause(clause, row) == 0:
+                if evaluate_clause(row, clause=clause) == 0:
                     predict_ans.append(0)
                     flag = 0
                     break
             if flag == 1:
                 predict_ans.append(1)
-        print(predict_ans)
         return predict_ans
 
     def possible_clauses(self, n):
@@ -104,7 +94,7 @@ class LearnByValiant:
         return allClauses
 
 
-def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
+def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3):
     """
     Learn Boolean functions by CNF using Valiant's Algorithm
 
@@ -120,7 +110,7 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
 
     start = datetime.datetime.now()
 
-    learner = LearnByValiant(cnf_arity, debug=debug)
+    learner = LearnByValiant(cnf_arity)
 
     write_header(output, cvfolds > 1)
 
@@ -135,7 +125,8 @@ def evaluate(dataset, output='out.csv', cvfolds=5, cnf_arity=3, debug=False):
                     random_state=202205)
 
                 model_fit = learner.fit(X_train, y_train)
-                acc, f1 = accuracy_score(y_test, model_fit.predict(X_test)), f1_score(y_test, model_fit.predict(X_test))
+                model_predict = model_fit.predict(X_test)
+                acc, f1 = accuracy_score(y_test, model_predict), f1_score(y_test, model_predict)
 
                 finish = datetime.datetime.now()
 
