@@ -32,17 +32,17 @@ echo "Number of Cores/Task Allocated = $SLURM_CPUS_PER_TASK"
 echo "Setting HOME to $DIR_NODE/mlbf"
 cd $DIR_NODE/mlbf
 
-#srun python mlbf/run_instances.py instances/valiant2022/v100c450.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c450_cv1.csv
-#srun python mlbf/run_instances.py instances/valiant2022/v100c431.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c431_cv1.csv
-#srun python mlbf/run_instances.py instances/valiant2022/v100c420.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c420_cv1.csv
-#srun python mlbf/run_instances.py instances/valiant2022/v100c400.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c400_cv1.csv
-#srun python mlbf/run_instances.py instances/valiant2022/v100c350.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c350_cv1.csv
+#srun python mlbf/run_instances.py instances/valiant_mlbf/v100c450.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c450_cv1.csv
+#srun python mlbf/run_instances.py instances/valiant_mlbf/v100c431.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c431_cv1.csv
+#srun python mlbf/run_instances.py instances/valiant_mlbf/v100c420.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c420_cv1.csv
+#srun python mlbf/run_instances.py instances/valiant_mlbf/v100c400.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c400_cv1.csv
+#srun python mlbf/run_instances.py instances/valiant_mlbf/v100c350.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c350_cv1.csv
 
-srun python mlbf/run_learn_valiant.py instances/valiant2022/v100c450.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c450_cv1_valiant.csv
-#srun python mlbf/run_learn_valiant.py instances/valiant2022/v100c431.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c431_cv1_valiant.csv
-#srun python mlbf/run_learn_valiant.py instances/valiant2022/v100c420.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c420_cv1_valiant.csv
-#srun python mlbf/run_learn_valiant.py instances/valiant2022/v100c400.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c400_cv1_valiant.csv
-#srun python mlbf/run_learn_valiant.py instances/valiant2022/v100c350.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c350_cv1_valiant.csv
+srun python mlbf/run_learn_valiant.py instances/valiant_mlbf/v100c450.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c450_cv1_valiant.csv
+#srun python mlbf/run_learn_valiant.py instances/valiant_mlbf/v100c431.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c431_cv1_valiant.csv
+#srun python mlbf/run_learn_valiant.py instances/valiant_mlbf/v100c420.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c420_cv1_valiant.csv
+#srun python mlbf/run_learn_valiant.py instances/valiant_mlbf/v100c400.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c400_cv1_valiant.csv
+#srun python mlbf/run_learn_valiant.py instances/valiant_mlbf/v100c350.tar.gz --cvfolds=1 --output=$DIR_RES/cei_v100c350_cv1_valiant.csv
 
 echo "Listing files at $DIR_RES"
 

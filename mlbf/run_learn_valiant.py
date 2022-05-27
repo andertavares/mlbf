@@ -9,7 +9,7 @@ import learn_valiant
 
 
 def run_learn(instances, output='out.csv', extraction_path='/tmp/learn_instances',
-              n_cores=cpu_count(), cvfolds=5, arity=3, debug=False):
+              n_cores=cpu_count(), cvfolds=5, arity=3):
     """
     Extracts all files in a tar.gz file and runs the experiment for each one of them
     :param n_cores: number of cpu cores to use with parallel computation
@@ -18,7 +18,6 @@ def run_learn(instances, output='out.csv', extraction_path='/tmp/learn_instances
     :param output: path to write results to (csv format)
     :param extraction_path: point to extract the cnf.pkl.gz instances
     :param arity: arity of CNF formulas
-    :param debug: run with verbose output steps
     :return:
     """
 
@@ -42,7 +41,7 @@ def run_learn(instances, output='out.csv', extraction_path='/tmp/learn_instances
     with Pool(processes=n_cores) as pool:
         print(f'Running with {n_cores} cpu cores. Parent process id {os.getppid()}.')
         pool.map(partial(learn_valiant.evaluate, output=output, cvfolds=cvfolds,
-                         cnf_arity=arity, debug=debug), data_files)
+                         cnf_arity=arity), data_files)
         pool.close()
 
         print()  # just a newline
